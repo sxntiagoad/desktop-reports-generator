@@ -1,278 +1,259 @@
 import flet as ft
-
+import os
 def main(page: ft.Page):
-    page.title = "Dashboard"
+    page.title = "Merchants Dashboard"
     page.padding = 0
     page.spacing = 0
-    page.bgcolor = "#f5f5f5"
+    page.bgcolor = "#f8f9fa"
+    base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    logo_path = os.path.join(base_path, "assets", "logo_eva.png")
+
     
-    def create_stat_card(title, value, change, icon):
-        return ft.Card(
-            content=ft.Container(
-                content=ft.Column(
+    def create_merchant_table():
+        merchants_data = [
+            {"name": "Love Wynnetal", "company": "Bobs Company", "id": "65245044", "status": "Active", "review": "In Review"},
+        ] * 10  # Repeat the same data 10 times for demonstration
+        
+        table_headers = [
+            "Legal Name",
+            "DBA",
+            "Merchant ID",
+            "Contact Name",
+            "KYC Status",
+            "KYB Status",
+            "",  # For manage button
+        ]
+        
+        # Create header row
+        header_row = ft.Row(
+            controls=[
+                ft.Container(
+                    content=ft.Text(header, size=12, color="#64748b", weight=ft.FontWeight.W_500),
+                    width=130,
+                )
+                for header in table_headers
+            ],
+            spacing=5,
+        )
+        
+        # Create table rows
+        table_rows = []
+        for merchant in merchants_data:
+            row = ft.Container(
+                content=ft.Row(
                     controls=[
-                        ft.Row(
-                            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                            controls=[
-                                ft.Text(title, size=14, color=ft.colors.GREY_800),
-                                ft.Icon(icon, color=ft.colors.BLUE, size=24),
-                            ],
+                        ft.Container(
+                            content=ft.Text(merchant["name"], size=14),
+                            width=130,
                         ),
-                        ft.Text(value, size=24, weight=ft.FontWeight.BOLD),
-                        ft.Text(
-                            change,
-                            size=12,
-                            color=ft.colors.GREEN if "+" in change else ft.colors.RED,
+                        ft.Container(
+                            content=ft.Text(merchant["company"], size=14),
+                            width=130,
+                        ),
+                        ft.Container(
+                            content=ft.Text(merchant["id"], size=14),
+                            width=130,
+                        ),
+                        ft.Container(
+                            content=ft.Text(merchant["name"], size=14),
+                            width=130,
+                        ),
+                        ft.Container(
+                            content=ft.Text(
+                                merchant["status"],
+                                size=14,
+                                color="#22c55e" if merchant["status"] == "Active" else "#64748b",
+                            ),
+                            width=130,
+                        ),
+                        ft.Container(
+                            content=ft.Text(
+                                merchant["review"],
+                                size=14,
+                                color="#3b82f6",
+                            ),
+                            width=130,
+                        ),
+                        ft.Container(
+                            content=ft.ElevatedButton(
+                                "Manage",
+                                style=ft.ButtonStyle(
+                                    color="white",
+                                    bgcolor="#0ea5e9",
+                                    shape=ft.RoundedRectangleBorder(radius=8),
+                                ),
+                                height=35,
+                            ),
+                            width=100,
                         ),
                     ],
                     spacing=5,
                 ),
-                padding=20,
-                width=250,
+                bgcolor="white",
+                padding=15,
+                border_radius=8,
             )
-        )
-
-    def create_chart_card():
-        return ft.Card(
-            content=ft.Container(
-                content=ft.Column(
-                    controls=[
-                        ft.Text("Sales Overview", size=16, weight=ft.FontWeight.BOLD),
-                        ft.Container(
-                            content=ft.Text("Chart placeholder"),
-                            height=300,
-                            alignment=ft.alignment.center,
-                        ),
-                    ],
-                ),
-                width=600,
-                padding=20,
-            )
-        )
-
-    def create_activity_card():
-        return ft.Card(
-            content=ft.Container(
-                content=ft.Column(
-                    controls=[
-                        ft.Text("Recent Activity", size=16, weight=ft.FontWeight.BOLD),
-                        ft.ListView(
-                            controls=[
-                                create_activity_item("New sale completed", "2 minutes ago"),
-                                create_activity_item("New customer registered", "5 minutes ago"),
-                                create_activity_item("Product updated", "1 hour ago"),
-                                create_activity_item("Order shipped", "2 hours ago"),
-                            ],
-                            spacing=10,
-                            height=300,
-                        ),
-                    ],
-                ),
-                width=400,
-                padding=20,
-            )
-        )
-
-    def create_activity_item(text, time):
-        return ft.ListTile(
-            leading=ft.CircleAvatar(
-                content=ft.Icon(ft.icons.NOTIFICATIONS, color="white", size=15),
-                bgcolor=ft.colors.BLUE,
-                radius=15,
-            ),
-            title=ft.Text(text, size=14),
-            subtitle=ft.Text(time, size=12, color=ft.colors.GREY_600),
-        )
-
-    def sidebar_item(icon, text, selected=False):
-        return ft.Container(
-            content=ft.Row(
-                controls=[
-                    ft.Icon(
-                        icon,
-                        color="white" if selected else ft.colors.BLUE_100,
-                        size=20,
+            table_rows.append(row)
+        
+        return ft.Column(
+            controls=[
+                header_row,
+                *table_rows,
+                ft.Container(
+                    content=ft.Row(
+                        controls=[
+                            ft.Text("Showing 1 to 20 of 24 entries", size=12, color="#64748b"),
+                            ft.Row(
+                                controls=[
+                                    ft.TextButton("Prev", style=ft.ButtonStyle(color="#64748b")),
+                                    ft.TextButton("1", style=ft.ButtonStyle(color="#0ea5e9")),
+                                    ft.TextButton("2", style=ft.ButtonStyle(color="#64748b")),
+                                    ft.TextButton("3", style=ft.ButtonStyle(color="#64748b")),
+                                    ft.TextButton("4", style=ft.ButtonStyle(color="#64748b")),
+                                    ft.TextButton("5", style=ft.ButtonStyle(color="#64748b")),
+                                    ft.TextButton("Next", style=ft.ButtonStyle(color="#64748b")),
+                                ],
+                            ),
+                            ft.Row(
+                                controls=[
+                                    ft.Text("Show Entries", size=12, color="#64748b"),
+                                    ft.Dropdown(
+                                        value="25",
+                                        options=[
+                                            ft.dropdown.Option("25"),
+                                            ft.dropdown.Option("50"),
+                                            ft.dropdown.Option("100"),
+                                        ],
+                                        width=70,
+                                    ),
+                                ],
+                                spacing=10,
+                            ),
+                        ],
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     ),
-                    ft.Text(
-                        text,
-                        color="white" if selected else ft.colors.BLUE_100,
-                        size=14,
-                        weight=ft.FontWeight.W_500
-                    )
-                ],
-                spacing=15,
-            ),
-            bgcolor=ft.colors.BLUE_700 if selected else None,
-            padding=15,
-            border_radius=30 if selected else None,
-            margin=ft.margin.only(left=20, right=20, top=5, bottom=5)
+                    padding=ft.padding.only(top=20),
+                ),
+            ],
+            spacing=10,
         )
-
+    logo_image=ft.Image(
+        src=logo_path,
+        width=40,
+        height=40,
+        fit=ft.ImageFit.CONTAIN,
+    )
     # Sidebar
     sidebar = ft.Container(
         width=250,
-        height=page.height,
-        bgcolor=ft.colors.BLUE_600,
-        padding=ft.padding.only(top=20),
+        bgcolor="#1e293b",
+        padding=20,
         content=ft.Column(
             controls=[
-                # Logo section
                 ft.Container(
+                    bgcolor="#F0F0F0",
+                    border_radius=8,
                     content=ft.Row(
                         controls=[
-                            ft.Icon(name=ft.icons.DASHBOARD_ROUNDED, color="white", size=25),
-                            ft.Text("Dashboard", size=20, color="white", weight=ft.FontWeight.BOLD)
+                            logo_image,
+                            ft.Text("Dashboard", color="white", size=16, weight=ft.FontWeight.W_500),
                         ],
-                        alignment=ft.MainAxisAlignment.CENTER,
                         spacing=10,
                     ),
-                    margin=ft.margin.only(bottom=30)
+                    margin=ft.margin.only(bottom=30),
                 ),
-                
-                # Menu Items
-                sidebar_item(ft.icons.DASHBOARD_OUTLINED, "Dashboard", selected=True),
-                sidebar_item(ft.icons.SHOPPING_CART_OUTLINED, "Orders"),
-                sidebar_item(ft.icons.PEOPLE_OUTLINE, "Customers"),
-                sidebar_item(ft.icons.INVENTORY_2_OUTLINED, "Products"),
-                sidebar_item(ft.icons.INSIGHTS_OUTLINED, "Analytics"),
-                
-                ft.Divider(color=ft.colors.BLUE_200, height=30),
-                
-                # Settings section
-                ft.Container(
-                    content=ft.Text("SETTINGS", size=12, color=ft.colors.BLUE_200),
-                    margin=ft.margin.only(left=35, bottom=10, top=10)
-                ),
-                sidebar_item(ft.icons.PERSON_OUTLINE, "Profile"),
-                sidebar_item(ft.icons.SETTINGS_OUTLINED, "Settings"),
-            ],
-            spacing=0,
-        )
-    )
-
-    # Top Navigation Bar
-    navbar = ft.Container(
-        height=70,
-        bgcolor="white",
-        padding=ft.padding.all(15),
-        content=ft.Row(
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-            controls=[
-                # Search Bar
-                ft.Container(
-                    width=400,
-                    height=45,
-                    bgcolor=ft.colors.GREY_50,
-                    border_radius=30,
-                    padding=ft.padding.only(left=20, right=20),
-                    content=ft.Row(
-                        controls=[
-                            ft.Icon(ft.icons.SEARCH, color=ft.colors.GREY_400, size=20),
-                            ft.TextField(
-                                border=None,
-                                hint_text="Buscar...",
-                                hint_style=ft.TextStyle(color=ft.colors.GREY_400),
-                                text_style=ft.TextStyle(color=ft.colors.GREY_800),
-                                content_padding=ft.padding.only(left=10),
-                                width=300,
-                            )
-                        ],
-                        spacing=10,
-                    )
-                ),
-                
-                # Right side icons
-                ft.Row(
+                ft.Column(
                     controls=[
-                        ft.IconButton(
-                            icon=ft.icons.NOTIFICATIONS_OUTLINED,
-                            icon_color=ft.colors.GREY_700,
-                            icon_size=20,
-                            bgcolor=ft.colors.GREY_100,
-                            style=ft.ButtonStyle(
-                                shape=ft.CircleBorder(),
-                                padding=10,
-                            )
-                        ),
-                        ft.IconButton(
-                            icon=ft.icons.EMAIL_OUTLINED,
-                            icon_color=ft.colors.GREY_700,
-                            icon_size=20,
-                            bgcolor=ft.colors.GREY_100,
-                            style=ft.ButtonStyle(
-                                shape=ft.CircleBorder(),
-                                padding=10,
-                            )
-                        ),
-                        ft.Container(width=1, bgcolor=ft.colors.GREY_300, height=30),
-                        ft.Row(
-                            controls=[
-                                ft.CircleAvatar(
-                                    foreground_image_url="https://avatars.githubusercontent.com/u/5797983?v=4",
-                                    radius=15,
-                                ),
-                                ft.Column(
-                                    controls=[
-                                        ft.Text("John Doe", size=14, weight=ft.FontWeight.W_500),
-                                        ft.Text("Admin", size=12, color=ft.colors.GREY_700),
-                                    ],
-                                    spacing=0,
-                                    alignment=ft.MainAxisAlignment.CENTER,
-                                ),
-                                ft.IconButton(
-                                    icon=ft.icons.ARROW_DROP_DOWN,
-                                    icon_color=ft.colors.GREY_700,
-                                )
-                            ],
-                            spacing=5,
+                        ft.Container(
+                            content=ft.Row(
+                                controls=[
+                                    ft.Icon(name=icon, color="#94a3b8", size=20),
+                                    ft.Text(text, color="#94a3b8", size=14),
+                                ],
+                                spacing=10,
+                            ),
+                            padding=10,
+                            border_radius=8,
                         )
+                        for icon, text in [
+                            (ft.icons.DASHBOARD_OUTLINED, "Dashboard"),
+                            (ft.icons.PEOPLE_OUTLINE, "Users"),
+                            (ft.icons.SETTINGS_OUTLINED, "Settings"),
+                            (ft.icons.INSERT_CHART_OUTLINED, "Reports"),
+                            (ft.icons.CREDIT_CARD, "Underwriting"),
+                            (ft.icons.PAYMENTS, "Settlements"),
+                            (ft.icons.RATE_REVIEW, "Product Review"),
+                            (ft.icons.SETTINGS, "Settings"),
+                        ]
                     ],
-                    spacing=10,
-                )
-            ]
-        )
+                    spacing=5,
+                ),
+            ],
+        ),
     )
 
-    # Main Content Area with Cards
-    content_area = ft.Container(
+    # Top Navigation Bar with Search
+    navbar = ft.Container(
         content=ft.Column(
             controls=[
-                # Stats Cards Row
-                ft.Row(
-                    controls=[
-                        create_stat_card("Total Sales", "$12,345", "+12%", ft.icons.TRENDING_UP),
-                        create_stat_card("Total Revenue", "$98,765", "+8%", ft.icons.ATTACH_MONEY),
-                        create_stat_card("New Customers", "321", "+15%", ft.icons.PERSON_ADD),
-                        create_stat_card("Total Orders", "1,234", "+10%", ft.icons.SHOPPING_CART),
-                    ],
-                    spacing=20,
+                ft.Container(
+                    content=ft.Row(
+                        controls=[
+                            ft.Text("Merchants", size=24, weight=ft.FontWeight.BOLD),
+                            ft.Row(
+                                controls=[
+                                    ft.Text("Filter by:", size=14, color="#64748b"),
+                                    ft.Dropdown(
+                                        value="Active",
+                                        options=[
+                                            ft.dropdown.Option("Active"),
+                                            ft.dropdown.Option("Inactive"),
+                                            ft.dropdown.Option("All"),
+                                        ],
+                                        width=120,
+                                    ),
+                                ],
+                                spacing=10,
+                            ),
+                        ],
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    ),
                 ),
-                
-                # Chart and Recent Activity
-                ft.Row(
-                    controls=[
-                        create_chart_card(),
-                        create_activity_card(),
-                    ],
-                    spacing=20,
+                ft.Container(
+                    content=ft.TextField(
+                        hint_text="Search merchant, Dealer ID etc",
+                        prefix_icon=ft.icons.SEARCH,
+                        border_radius=8,
+                        bgcolor="white",
+                        border_color="#e2e8f0",
+                    ),
+                    padding=ft.padding.only(top=20, bottom=20),
                 ),
             ],
-            spacing=20,
         ),
+        padding=30,
+        bgcolor="white",
+    )
+
+    # Main Content Area
+    content_area = ft.Container(
+        content=create_merchant_table(),
         padding=30,
         expand=True,
     )
 
     # Main Layout
     main_content = ft.Row(
-        controls=[sidebar, 
-                  ft.Container(
-                      content=ft.Column(
-                          controls=[navbar, content_area],
-                          spacing=0,
-                      ),
-                      expand=True,
-                  )],
+        controls=[
+            sidebar,
+            ft.Container(
+                content=ft.Column(
+                    controls=[navbar, content_area],
+                    spacing=0,
+                ),
+                expand=True,
+            ),
+        ],
         spacing=0,
         expand=True,
     )
