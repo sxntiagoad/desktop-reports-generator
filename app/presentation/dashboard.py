@@ -1,5 +1,9 @@
 import flet as ft
 import os
+from app.models.user import CurrentUser
+
+current_user = CurrentUser()
+
 def main(page: ft.Page):
     page.title = "Merchants Dashboard"
     page.padding = 0
@@ -7,12 +11,12 @@ def main(page: ft.Page):
     page.bgcolor = "#f8f9fa"
     base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     logo_path = os.path.join(base_path, "assets", "logo_eva.png")
-
+    print(f"Usuario en dashboard: {current_user}")
     
     def create_merchant_table():
         merchants_data = [
             {"name": "Love Wynnetal", "company": "Bobs Company", "id": "65245044", "status": "Active", "review": "In Review"},
-        ] * 10  # Repeat the same data 10 times for demonstration
+        ] * 10 
         
         table_headers = [
             "Legal Name",
