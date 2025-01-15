@@ -1,2 +1,3 @@
 config/eva-project*
 config/firebase_*
+config/__pycache__/

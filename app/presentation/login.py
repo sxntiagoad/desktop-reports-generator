@@ -26,7 +26,7 @@ def main(page: ft.Page):
         height=16, 
         stroke_width=2,
         color=ft.Colors.BLUE,
-        visible=False
+        visible=True
     )
 
     # Snackbar personalizado y moderno
@@ -61,45 +61,78 @@ def main(page: ft.Page):
 
     error_text = ft.Text("", color="red", size=12, visible=False)
 
+    # Diálogo de progreso suave y minimalista
+    loading_dialog = ft.AlertDialog(
+        modal=True,
+        content=ft.Container(
+            height=60,
+            width=40,
+            content=ft.ProgressRing(
+                width=30,
+                height=30,
+                stroke_width=2,
+                color=ft.colors.BLUE_400,
+            ),
+            bgcolor=ft.colors.WHITE,
+            border_radius=8,
+            shadow=ft.BoxShadow(
+                spread_radius=1,
+                blur_radius=15,
+                color=ft.colors.with_opacity(0.2, ft.colors.GREY_800),
+                offset=ft.Offset(0, 0),
+            ),
+            alignment=ft.alignment.center,
+            animate=ft.animation.Animation(300, ft.AnimationCurve.EASE_OUT),
+        ),
+        bgcolor=ft.colors.TRANSPARENT,
+        shape=ft.RoundedRectangleBorder(radius=8),
+        inset_padding=0,
+    )
+
     async def login(e):
-        # Mostrar loading y deshabilitar botón
-        loading.visible = True
-        login_button.disabled = True
+        # Siempre mostrar el diálogo de carga primero
+        page.dialog = loading_dialog
+        loading_dialog.open = True
         page.update()
+
+        # Pequeña pausa para la animación
+        await asyncio.sleep(0.3)
 
         email = email_input.value
         password = password_input.value
 
         if not email or not password:
+            await asyncio.sleep(0.7)  # Tiempo mínimo de visualización
+            loading_dialog.open = False
             error_text.value = "Por favor completa todos los campos"
             error_text.visible = True
-            loading.visible = False
-            login_button.disabled = False
             page.update()
             return
 
         try:
             user = auth_controller.login(email, password)
+            await asyncio.sleep(0.7)  # Tiempo mínimo de visualización
+            
             if user:
-                # Ocultar loading
-                loading.visible = False
-                login_button.disabled = False
-                
-                # Mostrar snackbar de éxito
-                page.show_snack_bar(success_snackbar)
+                # Primero cerrar el diálogo
+                loading_dialog.open = False
                 page.update()
                 
-                # Aquí agregarías la navegación a la siguiente pantalla
+                # Luego mostrar el snackbar y redirigir
+                page.show_snack_bar(success_snackbar)
+                await asyncio.sleep(0.1)  # Pequeña pausa para asegurar que el diálogo se cierre
+                page.go("/dashboard")
             else:
+                loading_dialog.open = False
                 error_text.value = "Credenciales inválidas"
                 error_text.visible = True
+                page.update()
         except Exception as e:
+            await asyncio.sleep(0.7)
+            loading_dialog.open = False
             error_text.value = "Error en la autenticación"
             error_text.visible = True
-        
-        loading.visible = False
-        login_button.disabled = False
-        page.update()
+            page.update()
 
     def handle_resize(e):
         width = page.window.width
