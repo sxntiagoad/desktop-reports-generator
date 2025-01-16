@@ -5,7 +5,8 @@ from app.presentation.widgets.data_table import create_data_table  # Asegúrate 
 
 def main(page: ft.Page):
     report_controller = ReportController()
-
+    current_reports = []  # Variable para mantener los reportes actuales
+    
     # Configuración inicial de la página
     page.title = "Merchants Dashboard"
     page.padding = 0
@@ -217,28 +218,70 @@ def main(page: ft.Page):
         )
     )
 
-    # Contenedor para la tabla de datos
+    # Crear un overlay de carga más elegante
+    loading_overlay = ft.Container(
+        content=ft.Column(
+            controls=[
+                ft.ProgressRing(
+                    width=40,
+                    height=40,
+                    stroke_width=3,
+                    color="#1a73e8",
+                ),
+                ft.Container(height=20),  # Espaciador
+                ft.Text(
+                    "Cargando datos...",
+                    size=16,
+                    weight=ft.FontWeight.W_500,
+                    color="#1a73e8",
+                ),
+                ft.Text(
+                    "Por favor espere",
+                    size=14,
+                    color="#666666",
+                ),
+            ],
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=8,
+        ),
+        bgcolor=ft.colors.with_opacity(0.9, "#ffffff"),
+        padding=40,
+        border_radius=12,
+        visible=False,
+    )
+
+    # Contenedor para la tabla de datos con el overlay de carga
     data_table_container = ft.Container(
-    content=ft.Row(  # Usamos Row para expansión horizontal
-        controls=[
-            ft.Container(  # Contenedor interno para la tabla
-                content=create_data_table(),
-                expand=True,  # Expandir para llenar el espacio horizontal
-                alignment=ft.alignment.top_center,  # Alinear al tope y centro
-            ),
-        ],
-        expand=True,  # Expandir para llenar el espacio disponible
-    ),
-    padding=16,
-    bgcolor="white",
-    border_radius=12,
-    shadow=ft.BoxShadow(
-        spread_radius=1,
-        blur_radius=15,
-        color=ft.colors.with_opacity(0.1, "#000000"),
-        offset=ft.Offset(0, 2),
-    ),
-)
+        content=ft.Stack(
+            controls=[
+                ft.Row(
+                    controls=[
+                        ft.Container(
+                            content=create_data_table(),
+                            expand=True,
+                            alignment=ft.alignment.top_center,
+                        ),
+                    ],
+                    expand=True,
+                ),
+                ft.Row(
+                    controls=[loading_overlay],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    expand=True,
+                ),
+            ],
+        ),
+        padding=16,
+        bgcolor="white",
+        border_radius=12,
+        shadow=ft.BoxShadow(
+            spread_radius=1,
+            blur_radius=15,
+            color=ft.colors.with_opacity(0.1, "#000000"),
+            offset=ft.Offset(0, 2),
+        ),
+    )
 
     # Layout principal mejorado
     content_area = ft.Container(
@@ -295,11 +338,34 @@ def main(page: ft.Page):
     # Actualizar la página
     page.update()
 
+    def handle_row_movement(direction, index):
+        nonlocal current_reports
+        try:
+            index = int(index) -1
+            if direction == "up" and index > 0:
+                # Intercambiar con el elemento anterior
+                current_reports[index], current_reports[index-1] = current_reports[index-1], current_reports[index]
+            elif direction == "down" and index < len(current_reports) - 1:
+                # Intercambiar con el elemento siguiente
+                current_reports[index], current_reports[index+1] = current_reports[index+1], current_reports[index]
+            
+            # Actualizar los índices
+            for i, report in enumerate(current_reports, 1):
+                report['index'] = i
+            
+            # Actualizar la tabla
+            new_table = create_data_table(current_reports, handle_row_movement)
+            data_table_container.content.controls[0].controls[0].content = new_table
+            page.update()
+            
+        except Exception as e:
+            print(f"Error al mover fila: {str(e)}")
+
     def filter_data(start_date_obj, end_date_obj, report_type):
+        nonlocal current_reports
         if start_date_obj and end_date_obj:
             try:
-                # Mostrar el indicador de progreso
-                progress_indicator.visible = True
+                loading_overlay.visible = True
                 page.update()
 
                 if isinstance(start_date_obj, str):
@@ -315,16 +381,18 @@ def main(page: ft.Page):
                 start = start.replace(hour=0, minute=0, second=0)
                 end = end.replace(hour=23, minute=59, second=59)
                 
-                reports = report_controller.get_filtered_reports(start, end, report_type)
-                new_table = create_data_table(reports)
-                # Actualizar el contenido del contenedor interno
-                data_table_container.content.controls[0].content = new_table
-                page.update()
+                current_reports = report_controller.get_filtered_reports(start, end, report_type)
+                # Asegurarse de que cada reporte tenga un índice
+                for i, report in enumerate(current_reports, 1):
+                    report['index'] = i
+                
+                new_table = create_data_table(current_reports, handle_row_movement)
+                data_table_container.content.controls[0].controls[0].content = new_table
+                
             except Exception as e:
                 print(f"Error en filter_data: {str(e)}")
             finally:
-                # Ocultar el indicador de progreso
-                progress_indicator.visible = False
+                loading_overlay.visible = False
                 page.update()
 
 if __name__ == "__main__":

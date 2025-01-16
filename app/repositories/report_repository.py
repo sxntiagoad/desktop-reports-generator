@@ -19,7 +19,7 @@ class ReportRepository:
                 [start_date_filter, end_date_filter]
             )
 
-            query = collection_ref.where(filter=composite_filter).select(['userId', 'fechaInit' , 'carId'])  # Solo cargar userId y fechaInit
+            query = collection_ref.where(filter=composite_filter).select(['userId', 'fechaInit' , 'carId', 'typeKit'])  # Solo cargar userId y fechaInit
             docs = query.get()
 
             # Procesar documentos con índice
@@ -33,7 +33,8 @@ class ReportRepository:
                                                        "%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y %H:%M"),
                     'user_uid': data.get('userId', ''),
                     'user_name': self.fetch_name(data.get('userId', ''), 'users', 'fullName'),
-                    'car_plate': self.fetch_name(data.get('carId', ''), 'cars', 'carPlate')
+                    'car_plate': self.fetch_name(data.get('carId', ''), 'cars', 'carPlate'),
+                    'project': data.get('typeKit', '')
                 })
                 results.append(data)
             
