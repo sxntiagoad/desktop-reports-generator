@@ -90,13 +90,14 @@ def main(page: ft.Page):
     )
 
     async def login(e):
-        # Siempre mostrar el diálogo de carga primero
+        # Mostrar el diálogo de carga
         page.dialog = loading_dialog
         loading_dialog.open = True
         page.update()
 
-        # Pequeña pausa para la animación
-        await asyncio.sleep(0.3)
+        # Limpiar el mensaje de error antes de intentar iniciar sesión
+        error_text.visible = False
+        error_text.value = ""
 
         email = email_input.value
         password = password_input.value
@@ -114,14 +115,14 @@ def main(page: ft.Page):
             await asyncio.sleep(0.7)  # Tiempo mínimo de visualización
             
             if user:
-                # Primero cerrar el diálogo
+                # Cerrar el diálogo
                 loading_dialog.open = False
                 page.update()
                 
-                # Luego mostrar el snackbar y redirigir
+                # Mostrar el snackbar y redirigir
                 page.show_snack_bar(success_snackbar)
                 await asyncio.sleep(0.1)  # Pequeña pausa para asegurar que el diálogo se cierre
-                page.go("/dashboard")
+                page.go("/dashboard")  # Asegúrate de que esta ruta sea correcta
             else:
                 loading_dialog.open = False
                 error_text.value = "Credenciales inválidas"

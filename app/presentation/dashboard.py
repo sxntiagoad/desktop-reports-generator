@@ -1,152 +1,17 @@
 import flet as ft
-import os
-from app.models.user import CurrentUser
-
-current_user = CurrentUser()
+from datetime import datetime, timedelta
+from app.controllers.report_controller import ReportController
+from app.presentation.widgets.data_table import create_data_table  # Asegúrate de que este módulo exista
 
 def main(page: ft.Page):
+    report_controller = ReportController()
+
+    # Configuración de la página
     page.title = "Merchants Dashboard"
     page.padding = 0
     page.spacing = 0
     page.bgcolor = "#f8f9fa"
-    base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    logo_path = os.path.join(base_path, "assets", "logo_eva.png")
-    print(f"Usuario en dashboard: {current_user}")
-    
-    def create_merchant_table():
-        merchants_data = [
-            {"name": "Love Wynnetal", "company": "Bobs Company", "id": "65245044", "status": "Active", "review": "In Review"},
-        ] * 10 
-        
-        table_headers = [
-            "Legal Name",
-            "DBA",
-            "Merchant ID",
-            "Contact Name",
-            "KYC Status",
-            "KYB Status",
-            "",  # For manage button
-        ]
-        
-        # Create header row
-        header_row = ft.Row(
-            controls=[
-                ft.Container(
-                    content=ft.Text(header, size=12, color="#64748b", weight=ft.FontWeight.W_500),
-                    width=130,
-                )
-                for header in table_headers
-            ],
-            spacing=5,
-        )
-        
-        # Create table rows
-        table_rows = []
-        for merchant in merchants_data:
-            row = ft.Container(
-                content=ft.Row(
-                    controls=[
-                        ft.Container(
-                            content=ft.Text(merchant["name"], size=14),
-                            width=130,
-                        ),
-                        ft.Container(
-                            content=ft.Text(merchant["company"], size=14),
-                            width=130,
-                        ),
-                        ft.Container(
-                            content=ft.Text(merchant["id"], size=14),
-                            width=130,
-                        ),
-                        ft.Container(
-                            content=ft.Text(merchant["name"], size=14),
-                            width=130,
-                        ),
-                        ft.Container(
-                            content=ft.Text(
-                                merchant["status"],
-                                size=14,
-                                color="#22c55e" if merchant["status"] == "Active" else "#64748b",
-                            ),
-                            width=130,
-                        ),
-                        ft.Container(
-                            content=ft.Text(
-                                merchant["review"],
-                                size=14,
-                                color="#3b82f6",
-                            ),
-                            width=130,
-                        ),
-                        ft.Container(
-                            content=ft.ElevatedButton(
-                                "Manage",
-                                style=ft.ButtonStyle(
-                                    color="white",
-                                    bgcolor="#0ea5e9",
-                                    shape=ft.RoundedRectangleBorder(radius=8),
-                                ),
-                                height=35,
-                            ),
-                            width=100,
-                        ),
-                    ],
-                    spacing=5,
-                ),
-                bgcolor="white",
-                padding=15,
-                border_radius=8,
-            )
-            table_rows.append(row)
-        
-        return ft.Column(
-            controls=[
-                header_row,
-                *table_rows,
-                ft.Container(
-                    content=ft.Row(
-                        controls=[
-                            ft.Text("Showing 1 to 20 of 24 entries", size=12, color="#64748b"),
-                            ft.Row(
-                                controls=[
-                                    ft.TextButton("Prev", style=ft.ButtonStyle(color="#64748b")),
-                                    ft.TextButton("1", style=ft.ButtonStyle(color="#0ea5e9")),
-                                    ft.TextButton("2", style=ft.ButtonStyle(color="#64748b")),
-                                    ft.TextButton("3", style=ft.ButtonStyle(color="#64748b")),
-                                    ft.TextButton("4", style=ft.ButtonStyle(color="#64748b")),
-                                    ft.TextButton("5", style=ft.ButtonStyle(color="#64748b")),
-                                    ft.TextButton("Next", style=ft.ButtonStyle(color="#64748b")),
-                                ],
-                            ),
-                            ft.Row(
-                                controls=[
-                                    ft.Text("Show Entries", size=12, color="#64748b"),
-                                    ft.Dropdown(
-                                        value="25",
-                                        options=[
-                                            ft.dropdown.Option("25"),
-                                            ft.dropdown.Option("50"),
-                                            ft.dropdown.Option("100"),
-                                        ],
-                                        width=70,
-                                    ),
-                                ],
-                                spacing=10,
-                            ),
-                        ],
-                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                    ),
-                    padding=ft.padding.only(top=20),
-                ),
-            ],
-            spacing=10,
-        )
-    logo_image=ft.Image(
-        src=logo_path,
-        width=40,
-        height=40,
-        fit=ft.ImageFit.CONTAIN,
-    )
+
     # Sidebar
     sidebar = ft.Container(
         width=250,
@@ -154,115 +19,203 @@ def main(page: ft.Page):
         padding=20,
         content=ft.Column(
             controls=[
-                ft.Container(
-                    bgcolor="#F0F0F0",
-                    border_radius=8,
-                    content=ft.Row(
-                        controls=[
-                            logo_image,
-                            ft.Text("Dashboard", color="white", size=16, weight=ft.FontWeight.W_500),
-                        ],
-                        spacing=10,
-                    ),
-                    margin=ft.margin.only(bottom=30),
-                ),
-                ft.Column(
-                    controls=[
-                        ft.Container(
-                            content=ft.Row(
-                                controls=[
-                                    ft.Icon(name=icon, color="#94a3b8", size=20),
-                                    ft.Text(text, color="#94a3b8", size=14),
-                                ],
-                                spacing=10,
-                            ),
-                            padding=10,
-                            border_radius=8,
-                        )
-                        for icon, text in [
-                            (ft.icons.DASHBOARD_OUTLINED, "Dashboard"),
-                            (ft.icons.PEOPLE_OUTLINE, "Users"),
-                            (ft.icons.SETTINGS_OUTLINED, "Settings"),
-                            (ft.icons.INSERT_CHART_OUTLINED, "Reports"),
-                            (ft.icons.CREDIT_CARD, "Underwriting"),
-                            (ft.icons.PAYMENTS, "Settlements"),
-                            (ft.icons.RATE_REVIEW, "Product Review"),
-                            (ft.icons.SETTINGS, "Settings"),
-                        ]
-                    ],
-                    spacing=5,
-                ),
+                ft.Text("Dashboard", color="white", size=16, weight=ft.FontWeight.W_500),
+                # Agrega más controles al sidebar aquí
             ],
         ),
     )
 
-    # Top Navigation Bar with Search
-    navbar = ft.Container(
-        content=ft.Column(
+    # Crear componentes de selección de fechas
+    start_date = ft.DatePicker(
+        help_text="Desde la fecha:",
+        first_date=datetime(2024, 1, 1),
+        last_date=datetime(2030, 12, 31)
+    )
+    
+    end_date = ft.DatePicker(
+        help_text="Hasta la fecha:",
+        first_date=datetime(2024, 1, 1),
+        last_date=datetime(2030, 12, 31)
+    )
+
+    # Validar el rango de fechas
+    def validate_date_range():
+        if start_date.value and end_date.value:
+            try:
+                # Convertir a datetime si es string
+                if isinstance(start_date.value, str):
+                    start = datetime.strptime(start_date.value, "%Y-%m-%d")
+                else:
+                    start = start_date.value
+
+                if isinstance(end_date.value, str):
+                    end = datetime.strptime(end_date.value, "%Y-%m-%d")
+                else:
+                    end = end_date.value
+
+                date_diff = end - start
+
+                if date_diff.days > 31:
+                    new_end_date = (start + timedelta(days=31))
+                    end_date.value = new_end_date.strftime("%Y-%m-%d")
+                    page.update()
+                    print("El rango de fechas no puede ser mayor a un mes")
+                elif date_diff.days < 0:
+                    end_date.value = start_date.value if isinstance(start_date.value, str) else start_date.value.strftime("%Y-%m-%d")
+                    page.update()
+                    print("La fecha final no puede ser menor que la inicial")
+            except Exception as e:
+                print(f"Error en validate_date_range: {str(e)}")
+
+    # Variables para el texto de los botones
+    start_date_text = ft.Text("Desde la fecha", color="#1a73e8", size=14, weight=ft.FontWeight.W_500)
+    end_date_text = ft.Text("Hasta la fecha", color="#1a73e8", size=14, weight=ft.FontWeight.W_500)
+
+    def update_date_button_text(e, is_start_date=True):
+        if e.control.value:
+            try:
+                # Convertir a datetime si es string
+                if isinstance(e.control.value, str):
+                    date_obj = datetime.strptime(e.control.value, "%Y-%m-%d")
+                else:
+                    date_obj = e.control.value
+                    
+                formatted_date = date_obj.strftime("%d/%m/%Y")
+                if is_start_date:
+                    start_date_text.value = f"Desde: {formatted_date}"
+                else:
+                    end_date_text.value = f"Hasta: {formatted_date}"
+                page.update()
+            except Exception as e:
+                print(f"Error en update_date_button_text: {str(e)}")
+
+    # Actualizar los DatePicker con la validación y actualización de texto
+    start_date.on_change = lambda e: [update_date_button_text(e, True), validate_date_range()]
+    end_date.on_change = lambda e: [update_date_button_text(e, False), validate_date_range()]
+
+    # Crear botones personalizados para mostrar los DatePicker
+    start_date_button = ft.Container(
+        content=ft.Row(
             controls=[
-                ft.Container(
-                    content=ft.Row(
-                        controls=[
-                            ft.Text("Merchants", size=24, weight=ft.FontWeight.BOLD),
-                            ft.Row(
-                                controls=[
-                                    ft.Text("Filter by:", size=14, color="#64748b"),
-                                    ft.Dropdown(
-                                        value="Active",
-                                        options=[
-                                            ft.dropdown.Option("Active"),
-                                            ft.dropdown.Option("Inactive"),
-                                            ft.dropdown.Option("All"),
-                                        ],
-                                        width=120,
-                                    ),
-                                ],
-                                spacing=10,
-                            ),
-                        ],
-                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                    ),
-                ),
-                ft.Container(
-                    content=ft.TextField(
-                        hint_text="Search merchant, Dealer ID etc",
-                        prefix_icon=ft.icons.SEARCH,
-                        border_radius=8,
-                        bgcolor="white",
-                        border_color="#e2e8f0",
-                    ),
-                    padding=ft.padding.only(top=20, bottom=20),
-                ),
+                ft.Icon(ft.icons.CALENDAR_TODAY, color="#1a73e8"),
+                start_date_text,
             ],
+            spacing=8,
         ),
-        padding=30,
-        bgcolor="white",
+        padding=ft.padding.all(10),
+        border=ft.border.all(1, "#1a73e8"),
+        border_radius=8,
+        ink=True,
+        on_click=lambda _: start_date.pick_date(),
+        bgcolor="#ffffff"
+    )
+    
+    end_date_button = ft.Container(
+        content=ft.Row(
+            controls=[
+                ft.Icon(ft.icons.CALENDAR_TODAY, color="#1a73e8"),
+                end_date_text,
+            ],
+            spacing=8,
+        ),
+        padding=ft.padding.all(10),
+        border=ft.border.all(1, "#1a73e8"),
+        border_radius=8,
+        ink=True,
+        on_click=lambda _: end_date.pick_date(),
+        bgcolor="#ffffff"
     )
 
-    # Main Content Area
-    content_area = ft.Container(
-        content=create_merchant_table(),
-        padding=30,
-        expand=True,
-    )
-
-    # Main Layout
-    main_content = ft.Row(
-        controls=[
-            sidebar,
-            ft.Container(
-                content=ft.Column(
-                    controls=[navbar, content_area],
-                    spacing=0,
-                ),
-                expand=True,
-            ),
+    # Crear un selector para los autoreportes
+    report_selector = ft.Dropdown(
+        label="Seleccionar reporte",
+        options=[
+            ft.dropdown.Option("Autoreportes de salud"),
+            ft.dropdown.Option("Chequeos de limpieza"),
+            ft.dropdown.Option("Preoperacionales"),
         ],
-        spacing=0,
-        expand=True,
+        value="Autoreportes de salud",
+        border_radius=8,
+        text_size=14,
+        label_style=ft.TextStyle(size=14, weight=ft.FontWeight.W_500),
+        focused_border_color="#1a73e8",
+        focused_color="#1a73e8",
     )
 
-    page.add(main_content)
+    # Botón de filtrar
+    filter_button = ft.Container(
+        content=ft.Row(
+            controls=[
+                ft.Icon(ft.icons.FILTER_ALT, color="#ffffff"),
+                ft.Text("Filtrar", color="#ffffff", size=14, weight=ft.FontWeight.W_500),
+            ],
+            spacing=8,
+        ),
+        padding=ft.padding.all(10),
+        bgcolor="#1a73e8",
+        border_radius=8,
+        ink=True,
+        on_click=lambda e: filter_data(start_date.value, end_date.value, report_selector.value),
+    )
+
+    # Crear un contenedor para los componentes de filtro
+    filter_controls = ft.Container(
+        content=ft.Row(
+            controls=[
+                start_date_button,
+                end_date_button,
+                report_selector,
+                filter_button
+            ],
+            alignment=ft.MainAxisAlignment.START,
+            spacing=16,
+        ),
+        padding=ft.padding.all(16),
+        bgcolor="#ffffff",
+        border_radius=12,
+        shadow=ft.BoxShadow(
+            spread_radius=1,
+            blur_radius=15,
+            color=ft.colors.with_opacity(0.1, "#000000"),
+            offset=ft.Offset(0, 2),
+        )
+    )
+
+    # Crear un contenedor para la tabla
+    data_table_column = ft.Column()
+
+    # Función para filtrar datos y mostrar en la tabla
+    def filter_data(start_date_obj, end_date_obj, report_type):
+        if start_date_obj and end_date_obj:
+            try:
+                # Convertir las fechas al formato correcto con hora
+                if isinstance(start_date_obj, str):
+                    start = datetime.strptime(start_date_obj, "%Y-%m-%d")
+                else:
+                    start = start_date_obj
+                
+                if isinstance(end_date_obj, str):
+                    end = datetime.strptime(end_date_obj, "%Y-%m-%d")
+                else:
+                    end = end_date_obj
+                
+                # Ajustar las horas: inicio del día para start_date, fin del día para end_date
+                start = start.replace(hour=0, minute=0, second=0)
+                end = end.replace(hour=23, minute=59, second=59)
+                
+                reports = report_controller.get_filtered_reports(start, end, report_type)
+                data_table = create_data_table(reports)
+                data_table_column.controls.clear()
+                data_table_column.controls.append(data_table)
+                page.update()
+            except Exception as e:
+                print(f"Error en filter_data: {str(e)}")
+
+    # Asegúrate de añadir los DatePicker a la página
+    page.add(start_date, end_date)  # Añadir los DatePicker a la página
+
+    # Layout principal
+    page.add(ft.Row(controls=[sidebar, ft.Column(controls=[filter_controls, data_table_column])]))
 
 if __name__ == "__main__":
     ft.app(target=main)
