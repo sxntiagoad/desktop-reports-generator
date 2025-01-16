@@ -6,26 +6,13 @@ from app.presentation.widgets.data_table import create_data_table  # Asegúrate 
 def main(page: ft.Page):
     report_controller = ReportController()
 
-    # Configuración de la página
+    # Configuración inicial de la página
     page.title = "Merchants Dashboard"
     page.padding = 0
     page.spacing = 0
     page.bgcolor = "#f8f9fa"
 
-    # Sidebar
-    sidebar = ft.Container(
-        width=250,
-        bgcolor="#1e293b",
-        padding=20,
-        content=ft.Column(
-            controls=[
-                ft.Text("Dashboard", color="white", size=16, weight=ft.FontWeight.W_500),
-                # Agrega más controles al sidebar aquí
-            ],
-        ),
-    )
-
-    # Crear componentes de selección de fechas
+    # Crear DatePickers
     start_date = ft.DatePicker(
         help_text="Desde la fecha:",
         first_date=datetime(2024, 1, 1),
@@ -37,6 +24,50 @@ def main(page: ft.Page):
         first_date=datetime(2024, 1, 1),
         last_date=datetime(2030, 12, 31)
     )
+
+    # Agregar DatePickers a la página primero
+    page.overlay.extend([start_date, end_date])
+
+    # Sidebar mejorado
+    sidebar = ft.Container(
+        width=250,
+        bgcolor="#1e293b",
+        padding=20,
+        content=ft.Column(
+            controls=[
+                ft.Container(
+                    content=ft.Row(
+                        controls=[
+                            ft.Icon(ft.icons.DASHBOARD, color="white"),
+                            ft.Text("Dashboard", color="white", size=16, weight=ft.FontWeight.W_500),
+                        ],
+                        spacing=10,
+                    ),
+                    padding=10,
+                    border_radius=8,
+                    ink=True,
+                    on_click=lambda _: print("Dashboard clicked"),
+                ),
+                ft.Divider(color="white24", height=30),
+                ft.Container(
+                    content=ft.Row(
+                        controls=[
+                            ft.Icon(ft.icons.ASSESSMENT, color="white"),
+                            ft.Text("Reportes", color="white", size=16),
+                        ],
+                        spacing=10,
+                    ),
+                    padding=10,
+                    border_radius=8,
+                    ink=True,
+                    on_click=lambda _: print("Reportes clicked"),
+                ),
+            ],
+        ),
+    )
+
+    # Indicador de progreso
+    progress_indicator = ft.ProgressRing(visible=False)  # Inicialmente oculto
 
     # Validar el rango de fechas
     def validate_date_range():
@@ -162,13 +193,18 @@ def main(page: ft.Page):
     filter_controls = ft.Container(
         content=ft.Row(
             controls=[
-                start_date_button,
-                end_date_button,
-                report_selector,
+                ft.Row(
+                    controls=[
+                        start_date_button,
+                        end_date_button,
+                        report_selector,
+                    ],
+                    spacing=16,
+                ),
                 filter_button
             ],
-            alignment=ft.MainAxisAlignment.START,
-            spacing=16,
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,  # Distribuir el espacio entre los controles
+            expand=True,  # Expandir para ocupar todo el ancho disponible
         ),
         padding=ft.padding.all(16),
         bgcolor="#ffffff",
@@ -181,11 +217,91 @@ def main(page: ft.Page):
         )
     )
 
-    data_table_column = ft.Column()
+    # Contenedor para la tabla de datos
+    data_table_container = ft.Container(
+    content=ft.Row(  # Usamos Row para expansión horizontal
+        controls=[
+            ft.Container(  # Contenedor interno para la tabla
+                content=create_data_table(),
+                expand=True,  # Expandir para llenar el espacio horizontal
+                alignment=ft.alignment.top_center,  # Alinear al tope y centro
+            ),
+        ],
+        expand=True,  # Expandir para llenar el espacio disponible
+    ),
+    padding=16,
+    bgcolor="white",
+    border_radius=12,
+    shadow=ft.BoxShadow(
+        spread_radius=1,
+        blur_radius=15,
+        color=ft.colors.with_opacity(0.1, "#000000"),
+        offset=ft.Offset(0, 2),
+    ),
+)
+
+    # Layout principal mejorado
+    content_area = ft.Container(
+        content=ft.Column(
+            controls=[
+                filter_controls,
+                ft.Container(height=16),  # Espaciador
+                data_table_container
+            ],
+            expand=True,  # Expandir la columna principal
+            spacing=0,
+        ),
+        padding=16,
+        expand=True,  # Expandir el contenedor principal
+    )
+
+    # Layout principal con Row expandible
+    main_row = ft.Row(
+        controls=[
+            sidebar,
+            ft.VerticalDivider(width=1, color="#EEEEEE"),
+            content_area
+        ],
+        expand=True,
+        spacing=0,
+    )
+
+    # Configuración de la página
+    page.padding = 0
+    page.spacing = 0
+    page.bgcolor = "#f8f9fa"
+    
+    # Agregar el layout principal a la página
+    page.add(main_row)
+
+    # Función para manejar cambios en el tamaño de la ventana
+    def page_resize(e):
+        # Ajustar el sidebar si la ventana es muy pequeña
+        if page.window_width < 600:
+            sidebar.width = 60
+            # Ocultar texto en el sidebar
+            for control in sidebar.content.controls:
+                if isinstance(control, ft.Container):
+                    control.content.controls = [control.content.controls[0]]  # Solo mantener el icono
+        else:
+            sidebar.width = 250
+            # Mostrar texto en el sidebar
+            # Aquí puedes restaurar el texto si lo necesitas
+        page.update()
+
+    # Suscribirse al evento de cambio de tamaño de la ventana
+    page.on_resize = page_resize
+
+    # Actualizar la página
+    page.update()
 
     def filter_data(start_date_obj, end_date_obj, report_type):
         if start_date_obj and end_date_obj:
             try:
+                # Mostrar el indicador de progreso
+                progress_indicator.visible = True
+                page.update()
+
                 if isinstance(start_date_obj, str):
                     start = datetime.strptime(start_date_obj, "%Y-%m-%d")
                 else:
@@ -200,17 +316,16 @@ def main(page: ft.Page):
                 end = end.replace(hour=23, minute=59, second=59)
                 
                 reports = report_controller.get_filtered_reports(start, end, report_type)
-                data_table = create_data_table(reports)
-                data_table_column.controls.clear()
-                data_table_column.controls.append(data_table)
+                new_table = create_data_table(reports)
+                # Actualizar el contenido del contenedor interno
+                data_table_container.content.controls[0].content = new_table
                 page.update()
             except Exception as e:
                 print(f"Error en filter_data: {str(e)}")
-
-    page.add(start_date, end_date)  
-
-    # Layout principal
-    page.add(ft.Row(controls=[sidebar, ft.Column(controls=[filter_controls, data_table_column])]))
+            finally:
+                # Ocultar el indicador de progreso
+                progress_indicator.visible = False
+                page.update()
 
 if __name__ == "__main__":
     ft.app(target=main)

@@ -13,8 +13,8 @@ def main(page: ft.Page):
     page.theme_mode = ft.ThemeMode.LIGHT
     page.padding = 0
     page.bgcolor = ft.Colors.WHITE
-    page.window.min_width = 900
-    page.window.min_height = 600
+    page.window.min_width = 1200
+    page.window.min_height = 800
     page.expand = True
 
     # Inicializar controlador

@@ -16,7 +16,7 @@ class ReportFilter:
         self.report_type = report_type
         self.collection = self.REPORT_COLLECTIONS[report_type]
 
-    @property
+    @property 
     def collection_name(self) -> str:
         return self.collection
     

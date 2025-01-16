@@ -1,36 +1,73 @@
 import flet as ft
 from typing import Any, List, Dict
 
-def create_data_table(data: List[Dict[str, Any]]) -> ft.DataTable:
-    # Definir las columnas de la tabla
-    columns = [
-        ft.DataColumn(ft.Text("Nombre")),
-        ft.DataColumn(ft.Text("Email")),
-        ft.DataColumn(ft.Text("Ubicación")),
-        ft.DataColumn(ft.Text("Estado")),
-        ft.DataColumn(ft.Text("Título del Trabajo")),
-        ft.DataColumn(ft.Text("Universidad")),
-    ]
-
-    # Crear las filas de la tabla
-    rows = []
-    for item in data:
-        rows.append(ft.DataRow(cells=[
-            ft.DataCell(ft.Text(item.get("name", ""))),
-            ft.DataCell(ft.Text(item.get("email", ""))),
-            ft.DataCell(ft.Text(item.get("location", ""))),
-            ft.DataCell(ft.Text(item.get("status", ""))),
-            ft.DataCell(ft.Text(item.get("job_title", ""))),
-            ft.DataCell(ft.Text(item.get("university", ""))),
-        ]))
-
-    # Crear la tabla
-    data_table = ft.DataTable(
-        columns=columns,
-        rows=rows,
-        border=ft.border.all(1, "#ccc"),
+def create_data_table(reports: List[Dict[str, Any]] = None) -> ft.Container:
+    # Tabla vacía si no hay reportes
+    if reports is None:
+        reports = []
+        
+    table = ft.DataTable(
+        columns=[
+            ft.DataColumn(
+                ft.Container(
+                    ft.Text("#", text_align=ft.TextAlign.CENTER),
+                    width=50,  # Ancho fijo para la columna numérica
+                    alignment=ft.alignment.center,
+                ),
+                numeric=True,
+            ),
+            ft.DataColumn(
+                ft.Container(
+                    ft.Text("Fecha", text_align=ft.TextAlign.CENTER),
+                    expand=True,
+                    width=200,  # Ancho mínimo
+                    alignment=ft.alignment.center,
+                ),
+            ),
+            ft.DataColumn(
+                ft.Container(
+                    ft.Text("Usuario", text_align=ft.TextAlign.CENTER),
+                    expand=True,
+                    width=200,  # Ancho mínimo
+                    alignment=ft.alignment.center,
+                ),
+            ),
+            ft.DataColumn(
+                ft.Container(
+                    ft.Text("Placa del Vehículo", text_align=ft.TextAlign.CENTER),
+                    expand=True,
+                    width=200,  # Ancho mínimo
+                    alignment=ft.alignment.center,
+                ),
+            ),
+        ],
+        rows=[
+            ft.DataRow(
+                cells=[
+                    ft.DataCell(ft.Text(str(report.get('index', '')), text_align=ft.TextAlign.CENTER)),
+                    ft.DataCell(ft.Text(report.get('fecha_formatted', ''), text_align=ft.TextAlign.CENTER)),
+                    ft.DataCell(ft.Text(report.get('user_name', ''), text_align=ft.TextAlign.CENTER)),
+                    ft.DataCell(ft.Text(report.get('car_plate', ''), text_align=ft.TextAlign.CENTER))
+                ]
+            ) for report in reports
+        ],
+        border=ft.border.all(1, "#EEEEEE"),
         border_radius=8,
-        bgcolor="#ffffff",
+        vertical_lines=ft.border.BorderSide(1, "#EEEEEE"),
+        horizontal_lines=ft.border.BorderSide(1, "#EEEEEE"),
+        heading_row_height=70,  # Altura del encabezado
+        data_row_min_height=30,  # Altura mínima de las filas
+        data_row_max_height=50,  # Altura máxima de las filas
+        column_spacing=70,  # Quitamos el spacing fijo
+        expand=True,
     )
-
-    return data_table 
+    
+    return ft.Container(
+        content=ft.Column(
+            controls=[table],
+            scroll=ft.ScrollMode.ALWAYS,
+        ),
+        height=800,  # Altura fija del contenedor
+        border_radius=8,
+        expand=True,
+    ) 
