@@ -181,14 +181,11 @@ def main(page: ft.Page):
         )
     )
 
-    # Crear un contenedor para la tabla
     data_table_column = ft.Column()
 
-    # Función para filtrar datos y mostrar en la tabla
     def filter_data(start_date_obj, end_date_obj, report_type):
         if start_date_obj and end_date_obj:
             try:
-                # Convertir las fechas al formato correcto con hora
                 if isinstance(start_date_obj, str):
                     start = datetime.strptime(start_date_obj, "%Y-%m-%d")
                 else:
@@ -199,7 +196,6 @@ def main(page: ft.Page):
                 else:
                     end = end_date_obj
                 
-                # Ajustar las horas: inicio del día para start_date, fin del día para end_date
                 start = start.replace(hour=0, minute=0, second=0)
                 end = end.replace(hour=23, minute=59, second=59)
                 
@@ -211,8 +207,7 @@ def main(page: ft.Page):
             except Exception as e:
                 print(f"Error en filter_data: {str(e)}")
 
-    # Asegúrate de añadir los DatePicker a la página
-    page.add(start_date, end_date)  # Añadir los DatePicker a la página
+    page.add(start_date, end_date)  
 
     # Layout principal
     page.add(ft.Row(controls=[sidebar, ft.Column(controls=[filter_controls, data_table_column])]))
