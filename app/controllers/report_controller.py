@@ -14,6 +14,10 @@ class ReportController:
                            project: Optional[str] = None,
                            car: Optional[str] = None) -> List[Dict[str, Any]]:
         try:
+            if not start_date_str or not end_date_str:
+                print("Error: Las fechas de inicio y fin no pueden estar vacías.")
+                return []
+
             # Verificar si las fechas son objetos datetime
             if isinstance(start_date_str, datetime):
                 start_date = start_date_str

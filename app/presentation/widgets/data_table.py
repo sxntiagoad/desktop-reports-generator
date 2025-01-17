@@ -56,7 +56,7 @@ def create_data_table(reports: List[Dict[str, Any]] = None, on_row_select=None, 
     ]
     
     # Agregar columnas específicas según el tipo de colección
-    if collection_type in ['preoperacionales', 'limpiezas']:
+    if collection_type in ['preoperacionales', 'limpieza']:
         additional_columns = [
             ft.DataColumn(
                 ft.Container(
@@ -65,6 +65,20 @@ def create_data_table(reports: List[Dict[str, Any]] = None, on_row_select=None, 
                     alignment=ft.alignment.center,
                 ),
             ),
+        ]
+        if collection_type == 'preoperacionales':
+            additional_columns.append(
+                ft.DataColumn(
+                    ft.Container(
+                        ft.Text("Proyecto", text_align=ft.TextAlign.CENTER),
+                        width=200,
+                        alignment=ft.alignment.center,
+                    ),
+                )
+            )
+        base_columns.extend(additional_columns)
+    else:
+        additional_columns = [
             ft.DataColumn(
                 ft.Container(
                     ft.Text("Proyecto", text_align=ft.TextAlign.CENTER),
@@ -159,7 +173,6 @@ def create_data_table(reports: List[Dict[str, Any]] = None, on_row_select=None, 
         status = report.get('processing_status', 'pending')
         pdf_path = report.get('pdf_path')
         
-        print(f"Estado del botón PDF - ID: {report.get('doc_id')} - Status: {status} - Path: {pdf_path}")
         
         if status == 'pending':
             return ft.IconButton(
@@ -193,7 +206,6 @@ def create_data_table(reports: List[Dict[str, Any]] = None, on_row_select=None, 
 
     def handle_pdf_click(pdf_path):
         try:
-            print(f"Intentando abrir PDF: {pdf_path}")
             if os.path.exists(pdf_path):
                 on_file_click(pdf_path)
             else:
@@ -217,10 +229,18 @@ def create_data_table(reports: List[Dict[str, Any]] = None, on_row_select=None, 
             ft.DataCell(get_file_button(report))
         ]
         
-        if collection_type in ['preoperacionales', 'limpiezas']:
+        if collection_type in ['preoperacionales', 'limpieza']:
             additional_cells = [
                 ft.DataCell(ft.Text(report.get('car_plate', ''), text_align=ft.TextAlign.CENTER)),
-                ft.DataCell(ft.Text(report.get('project', ''), text_align=ft.TextAlign.CENTER))
+            ]
+            if collection_type == 'preoperacionales':
+                additional_cells.append(
+                    ft.DataCell(ft.Text(report.get('project', ''), text_align=ft.TextAlign.CENTER))
+                )
+            base_cells.extend(additional_cells)
+        else:
+            additional_cells = [
+                ft.DataCell(ft.Text(report.get('project', ''), text_align=ft.TextAlign.CENTER)),
             ]
             base_cells.extend(additional_cells)
             

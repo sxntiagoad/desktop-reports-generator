@@ -4,8 +4,11 @@ from datetime import datetime, timedelta
 from app.controllers.report_controller import ReportController
 from app.presentation.widgets.data_table import create_data_table
 from app.config.firebase_config import db
+from app.controllers.auth_controller import AuthController
+from app.models.user import CurrentUser
 
 def main(page: ft.Page):
+    current_user =CurrentUser()
     report_controller = ReportController()
     current_reports = []  # Variable para mantener los reportes actuales
 
@@ -81,7 +84,23 @@ def main(page: ft.Page):
                     ink=True,
                     on_click=lambda _: print("Reportes clicked"),
                 ),
+                ft.Container(expand=True),  # Espaciador flexible
+                ft.Divider(color="white24", height=30),
+                ft.Container(
+                    content=ft.Row(
+                        controls=[
+                            ft.Icon(ft.icons.LOGOUT, color="#ff4d4d"),  # Rojo para indicar acción de salida
+                            ft.Text("Cerrar Sesión", color="#ff4d4d", size=16),
+                        ],
+                        spacing=10,
+                    ),
+                    padding=10,
+                    border_radius=8,
+                    ink=True,
+                    on_click=lambda _: handle_logout(page),
+                ),
             ],
+            expand=True,  # Permite que la columna se expanda
         ),
     )
 
@@ -537,6 +556,19 @@ def main(page: ft.Page):
             finally:
                 loading_overlay.visible = False
                 page.update()
+
+    def handle_logout(page):
+        try:
+            auth_controller = AuthController()
+            logout_success = auth_controller.logout()
+            
+            if logout_success:
+                page.go("/")  # Redirigir a la ruta de inicio de sesión
+                page.update()
+            else:
+                print("Error: El logout no fue exitoso")
+        except Exception as e:
+            print(f"Error al cerrar sesión: {str(e)}")
 
 if __name__ == "__main__":
     ft.app(target=main)

@@ -36,35 +36,42 @@ class ReportRepository:
 
     def get_reports(self, report_filter: ReportFilter) -> List[Dict[str, Any]]:
         try:
-            # Mapear tipos de reporte a colecciones
-            collection_map = {
-                "Autoreportes de salud": "autoreportes",
-                "Chequeos de limpieza": "limpiezas",
-                "Preoperacionales": "preoperacionales"
-            }
             
-            collection = collection_map.get(report_filter.report_type, "preoperacionales")
+            if not report_filter.start_date or not report_filter.end_date:
+                print("Error: Fechas de filtro inválidas")
+                return []
+            
+            collection = report_filter.collection
+            if not collection:
+                print("Error: Colección no especificada")
+                return []
+            
             collection_ref = db.collection(collection)
             
             # Lista para almacenar todos los filtros
             filters = []
             
             # Agregar filtros de fecha según la colección
-            if report_filter.collection == 'preoperacionales':
+            if collection == 'preoperacionales':
                 filters.append(FieldFilter('fechaInit', '>=', report_filter.start_date))
                 filters.append(FieldFilter('fechaInit', '<=', report_filter.end_date))
-            else:
+            elif collection == 'limpieza':
+                # Para la colección de limpieza, verificar que el campo fecha no esté vacío
+                filters.append(FieldFilter('fecha', '>=', report_filter.start_date))
+                filters.append(FieldFilter('fecha', '<=', report_filter.end_date))
+            else:  # health-reports y otros
                 filters.append(FieldFilter('fecha', '>=', report_filter.start_date))
                 filters.append(FieldFilter('fecha', '<=', report_filter.end_date))
             
             # Agregar filtro de vehículo si existe
             if report_filter.car:
                 car_id = self.fetch_car_id_by_plate(report_filter.car)
-                filters.append(FieldFilter('carId', '==', car_id))
+                if car_id:  # Solo agregar si se encontró el ID del vehículo
+                    filters.append(FieldFilter('carId', '==', car_id))
             
             # Agregar filtro de proyecto si existe
             if report_filter.project:
-                if report_filter.collection == 'preoperacionales':
+                if collection == 'preoperacionales':
                     filters.append(FieldFilter('typeKit', '==', report_filter.project))
                 else:
                     filters.append(FieldFilter('selectedValue', '==', report_filter.project))
@@ -75,60 +82,62 @@ class ReportRepository:
                 filters
             )
 
-            # Aplicar el filtro compuesto a la consulta
-            if report_filter.collection == 'preoperacionales':
+            # Aplicar el filtro compuesto a la consulta y seleccionar campos específicos
+            if collection == 'preoperacionales':
                 query = collection_ref.where(filter=composite_filter).select(['userId', 'fechaInit', 'carId', 'typeKit'])
-            elif report_filter.collection == 'limpieza':
+            elif collection == 'limpieza':
                 query = collection_ref.where(filter=composite_filter).select(['userId', 'fecha', 'carId'])
-            else:
+            else:  # health-reports
                 query = collection_ref.where(filter=composite_filter).select(['userId', 'fecha', 'carId', 'selectedValue'])
 
             docs = query.get()
-
+            
             # Procesar documentos con índice
             results = []
-            for index, doc in enumerate(docs, 1):  # Empezar índice en 1
-                data = doc.to_dict()
-                if report_filter.collection == 'preoperacionales':
-                    data.update({
-                        'collection_type': collection,  # Agregar collection_type
+            for index, doc in enumerate(docs, 1):
+                try:
+                    data = doc.to_dict()
+                    if not data:
+                        continue
+                    
+                    # Verificar y formatear la fecha según el tipo de colección
+                    fecha = None
+                    if collection == 'preoperacionales':
+                        fecha = data.get('fechaInit', '')
+                    else:
+                        fecha = data.get('fecha', '')
+                    
+                    if not fecha:  # Saltar documentos sin fecha
+                        continue
+                        
+                    try:
+                        fecha_formatted = datetime.strptime(fecha, "%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y %H:%M")
+                    except ValueError:
+                        continue  # Saltar documentos con formato de fecha inválido
+                    # Construir el diccionario de resultados base
+                    result = {
+                        'collection_type': collection,
                         'index': index,
-                        'doc_id': doc.id,  # ID del documento
-                        'fecha_formatted': datetime.strptime(data.get('fechaInit', ''),"%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y %H:%M"),
-                        'user_uid': data.get('userId', ''),
-                        'user_name': self.fetch_name(data.get('userId', ''), 'users', 'fullName'),
-                        'car_plate': self.fetch_name(data.get('carId', ''), 'cars', 'carPlate'),
-                        'project': data.get('typeKit', ''),
-                        'pdf_path': None,
-                        'processing_status': 'pending'
-                    })
-                    results.append(data)
-                elif report_filter.collection == 'limpiezas':
-                    data.update({
-                        'collection_type': collection,  # Agregar collection_type
-                        'index': index,
-                        'doc_id': doc.id,  # ID del documento
-                        'fecha_formatted': datetime.strptime(data.get('fechaInit', ''),"%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y %H:%M"),
-                        'user_uid': data.get('userId', ''),
-                        'user_name': self.fetch_name(data.get('userId', ''), 'users', 'fullName'),
-                        'car_plate': self.fetch_name(data.get('carId', ''), 'cars', 'carPlate'),
-                        'project': data.get('selectedValue', ''),
-                        'pdf_path': None,
-                        'processing_status': 'pending'
-                    })
-                    results.append(data)
-                else:
-                    data.update({
-                        'collection_type': collection,  # Agregar collection_type
-                        'index': index,
-                        'doc_id': doc.id,  # ID del documento
-                        'fecha_formatted': datetime.strptime(data.get('fecha', ''),"%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y %H:%M"),
+                        'doc_id': doc.id,
+                        'fecha_formatted': fecha_formatted,
                         'user_uid': data.get('userId', ''),
                         'user_name': self.fetch_name(data.get('userId', ''), 'users', 'fullName'),
                         'pdf_path': None,
                         'processing_status': 'pending'
-                    })
-                    results.append(data)
+                    }
+                    
+                    # Agregar campos específicos según el tipo de colección
+                    if collection in ['preoperacionales', 'limpieza']:
+                        result['car_plate'] = self.fetch_name(data.get('carId', ''), 'cars', 'carPlate')
+                    
+                    if collection in ['preoperacionales', 'health_reports']:
+                        result['project'] = data.get('typeKit' if collection == 'preoperacionales' else 'selectedValue', '')
+                    
+                    results.append(result)
+                    
+                except Exception as e:
+                    print(f"Error procesando documento {doc.id}: {str(e)}")
+                    continue
             
             print(f"Procesados {len(results)} documentos")
             return results
@@ -165,6 +174,13 @@ class ReportRepository:
         MAX_RETRIES = 3
         RETRY_DELAY = 2
 
+        # Mapeo de colecciones a rutas de Storage
+        STORAGE_PATHS = {
+            'health_reports': 'reportes_salud',
+            'limpieza': 'chequeos_limpieza',
+            'preoperacionales': 'preoperacionales'
+        }
+
         def process_single_report(report):
             retries = 0
             while retries < MAX_RETRIES:
@@ -193,12 +209,21 @@ class ReportRepository:
                                 os.remove(pdf_path)
                             except:
                                 pass
-
-                    # Procesar el reporte
+                    storage_path = STORAGE_PATHS.get(bucket_collection, 'preoperacionales')                
+                    # Procesar el reporte según su tipo
                     try:
-                        excel_blob = bucket.blob(f"{bucket_collection}/{doc_id}.xlsx")
+                        excel_blob = bucket.blob(f"{storage_path}/{doc_id}.xlsx")
                         excel_blob.download_to_filename(temp_excel_path)
-                        result_pdf_path = convert_excel_to_pdf(temp_excel_path)
+                    
+                        # Seleccionar el script de conversión según el tipo de reporte
+                        if bucket_collection == 'preoperacionales':
+                            result_pdf_path = convert_excel_to_pdf(temp_excel_path, script='preoperacionales')
+                        elif bucket_collection == 'health_reports':
+                            result_pdf_path = convert_excel_to_pdf(temp_excel_path, script='health-reports')
+                        elif bucket_collection == 'limpieza':
+                            result_pdf_path = convert_excel_to_pdf(temp_excel_path, script='limpieza')
+                        else:
+                            raise Exception(f"Tipo de reporte no soportado: {bucket_collection}")
 
                         if result_pdf_path and os.path.exists(result_pdf_path):
                             report['pdf_path'] = result_pdf_path

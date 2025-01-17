@@ -13,19 +13,25 @@ class CurrentUser:
         self.role = None
         self.is_authenticated = False
 
-    def login(self, user_id, email, name, role):
-        self.user_id = user_id
-        self.email = email
-        self.name = name
-        self.role = role
-        self.is_authenticated = True
-
+    @classmethod
+    def destroy_instance(cls):
+        """Elimina la instancia singleton"""
+        cls._instance = None
+    
     def logout(self):
         self.user_id = None
         self.email = None
         self.name = None
         self.role = None
         self.is_authenticated = False
+        self.destroy_instance()  # Elimina la instancia al hacer logout
+
+    def login(self, user_id, email, name, role):
+        self.user_id = user_id
+        self.email = email
+        self.name = name
+        self.role = role
+        self.is_authenticated = True
 
     @property
     def is_logged_in(self):

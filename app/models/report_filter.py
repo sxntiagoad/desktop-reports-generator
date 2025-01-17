@@ -13,10 +13,18 @@ class ReportFilter:
                  report_type: str = "Preoperacionales",
                  project: Optional[str] = None,
                  car: Optional[str] = None):
-        self.start_date = start_date.strftime("%Y-%m-%d %H:%M:%S") if start_date else None
-        self.end_date = end_date.strftime("%Y-%m-%d %H:%M:%S") if end_date else None
+        if start_date and isinstance(start_date, datetime):
+            self.start_date = start_date.strftime("%Y-%m-%d %H:%M:%S")
+        else:
+            self.start_date = None
+            
+        if end_date and isinstance(end_date, datetime):
+            self.end_date = end_date.strftime("%Y-%m-%d %H:%M:%S")
+        else:
+            self.end_date = None
+            
         self.report_type = report_type
-        self.collection = self.REPORT_COLLECTIONS[report_type]
+        self.collection = self.REPORT_COLLECTIONS.get(report_type)
         self.project = project
         self.car = car
 

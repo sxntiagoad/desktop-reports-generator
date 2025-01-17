@@ -112,7 +112,7 @@ def main(page: ft.Page):
 
         try:
             user = auth_controller.login(email, password)
-            await asyncio.sleep(0.7)  # Tiempo mínimo de visualización
+            await asyncio.sleep(0.2)  # Tiempo mínimo de visualización
             
             if user:
                 # Cerrar el diálogo
@@ -128,6 +128,8 @@ def main(page: ft.Page):
                 error_text.value = "Credenciales inválidas"
                 error_text.visible = True
                 page.update()
+                if user:
+                    page.go("/dashboard")
         except Exception as e:
             await asyncio.sleep(0.7)
             loading_dialog.open = False

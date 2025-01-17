@@ -39,3 +39,16 @@ class AuthController:
         except Exception as e:
             print(f"Error al iniciar sesión: {e}")
             return None
+
+    def logout(self):
+        try:
+            # Cerrar sesión en Firebase
+            auth_client.current_user = None
+            
+            # Limpiar y destruir la instancia del usuario actual
+            self.current_user.logout()
+            
+            return True
+        except Exception as e:
+            print(f"Error al cerrar sesión: {e}")
+            return False

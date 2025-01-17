@@ -3,12 +3,13 @@ import win32com.client
 import pythoncom
 import time
 
-def convert_excel_to_pdf(input_excel_path):
+def convert_excel_to_pdf(input_excel_path, script='preoperacionales'):
     """
     Convierte un archivo Excel específico a PDF.
     
     Args:
         input_excel_path (str): Ruta completa al archivo Excel a convertir
+        script (str): Tipo de reporte ('preoperacional', 'health-reports', 'limpieza')
         
     Returns:
         str: Ruta del archivo PDF generado o None si hay error
@@ -44,19 +45,45 @@ def convert_excel_to_pdf(input_excel_path):
         wb = excel.Workbooks.Open(input_excel_path)
         ws = wb.Worksheets[0]
         
-        # Configurar área de impresión y ajustes
-        ws.PageSetup.PrintArea = "A1:U85"
-        ws.PageSetup.FitToPagesWide = 1
-        ws.PageSetup.FitToPagesTall = 2
-        ws.PageSetup.Orientation = 1  # xlPortrait
-        ws.PageSetup.PaperSize = 9   # A4
-        ws.PageSetup.LeftMargin = excel.InchesToPoints(0.2)
-        ws.PageSetup.RightMargin = excel.InchesToPoints(0.2)
-        ws.PageSetup.TopMargin = excel.InchesToPoints(0.2)
-        ws.PageSetup.BottomMargin = excel.InchesToPoints(0.2)
-        
-        # Ajustar el zoom
-        ws.PageSetup.Zoom = 50
+        # Configurar área de impresión y ajustes según el tipo
+        if script == 'preoperacionales':
+            # Configuración para preoperacional
+            ws.PageSetup.PrintArea = "A1:U85"
+            ws.PageSetup.FitToPagesWide = 1
+            ws.PageSetup.FitToPagesTall = 2
+            ws.PageSetup.Orientation = 1  # xlPortrait
+            ws.PageSetup.PaperSize = 9   # A4
+            ws.PageSetup.LeftMargin = excel.InchesToPoints(0.2)
+            ws.PageSetup.RightMargin = excel.InchesToPoints(0.2)
+            ws.PageSetup.TopMargin = excel.InchesToPoints(0.2)
+            ws.PageSetup.BottomMargin = excel.InchesToPoints(0.2)
+            ws.PageSetup.Zoom = 50
+            
+        elif script == 'health_reports':
+            ws.PageSetup.PrintArea = "A1:AS20"
+            ws.PageSetup.Orientation = 2  # xlLandscape (horizontal)
+            ws.PageSetup.Zoom = False  # Deshabilitar zoom fijo
+            ws.PageSetup.FitToPagesWide = 1
+            ws.PageSetup.FitToPagesTall = 1
+            ws.PageSetup.PaperSize = 9   # A4
+            ws.PageSetup.LeftMargin = excel.InchesToPoints(0.2)
+            ws.PageSetup.RightMargin = excel.InchesToPoints(0.2)
+            ws.PageSetup.TopMargin = excel.InchesToPoints(0.2)
+            ws.PageSetup.BottomMargin = excel.InchesToPoints(0.2)
+            ws.PageSetup.CenterHorizontally = True
+        elif script == 'limpieza':
+            # Configuración para limpieza (horizontal, una página)
+            ws.PageSetup.PrintArea = "B2:Y28"
+            ws.PageSetup.Orientation = 2  # xlLandscape (horizontal)
+            ws.PageSetup.Zoom = False  # Deshabilitar zoom fijo
+            ws.PageSetup.FitToPagesWide = 1
+            ws.PageSetup.FitToPagesTall = 1
+            ws.PageSetup.PaperSize = 9   # A4
+            ws.PageSetup.LeftMargin = excel.InchesToPoints(0.2)
+            ws.PageSetup.RightMargin = excel.InchesToPoints(0.2)
+            ws.PageSetup.TopMargin = excel.InchesToPoints(0.2)
+            ws.PageSetup.BottomMargin = excel.InchesToPoints(0.2)
+            ws.PageSetup.CenterHorizontally = True
         
         # Exportar a PDF con timeout
         for _ in range(3):  # Intentar 3 veces
