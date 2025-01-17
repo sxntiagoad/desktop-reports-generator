@@ -50,13 +50,13 @@ def convert_excel_to_pdf(input_excel_path):
         ws.PageSetup.FitToPagesTall = 2
         ws.PageSetup.Orientation = 1  # xlPortrait
         ws.PageSetup.PaperSize = 9   # A4
-        ws.PageSetup.LeftMargin = excel.InchesToPoints(0.75)
-        ws.PageSetup.RightMargin = excel.InchesToPoints(0.75)
-        ws.PageSetup.TopMargin = excel.InchesToPoints(0.75)
-        ws.PageSetup.BottomMargin = excel.InchesToPoints(0.75)
+        ws.PageSetup.LeftMargin = excel.InchesToPoints(0.2)
+        ws.PageSetup.RightMargin = excel.InchesToPoints(0.2)
+        ws.PageSetup.TopMargin = excel.InchesToPoints(0.2)
+        ws.PageSetup.BottomMargin = excel.InchesToPoints(0.2)
         
         # Ajustar el zoom
-        ws.PageSetup.Zoom = 44
+        ws.PageSetup.Zoom = 50
         
         # Exportar a PDF con timeout
         for _ in range(3):  # Intentar 3 veces

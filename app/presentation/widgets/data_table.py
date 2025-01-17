@@ -2,6 +2,9 @@ import flet as ft
 from typing import Any, List, Dict
 import os
 
+from app.utils import pdf_combiner
+from app.utils.pdf_combiner import combine_pdfs
+
 def create_data_table(reports: List[Dict[str, Any]] = None, on_row_select=None, on_file_click=None, on_delete=None) -> ft.Container:
     # Tabla vacía si no hay reportes
     if reports is None:
@@ -73,6 +76,32 @@ def create_data_table(reports: List[Dict[str, Any]] = None, on_row_select=None, 
         base_columns.extend(additional_columns)
     
     columns = base_columns
+
+    def get_all_pdf_paths():
+        """Obtiene todos los pdf_paths de los documentos en la tabla"""
+        pdf_paths = []
+        for report in reports:
+            pdf_path = report.get('pdf_path')
+            if pdf_path and os.path.exists(pdf_path):
+                pdf_paths.append(pdf_path)
+        return pdf_paths
+
+    def process_all_pdfs(e):
+        """Procesa todos los PDFs disponibles"""
+        pdf_paths = get_all_pdf_paths()
+        if pdf_paths:
+            # Combinar los PDFs usando pdf_combiner
+            combined_pdf_path = combine_pdfs(pdf_paths)
+            if combined_pdf_path and on_file_click:
+                # Abrir solo el PDF combinado
+                on_file_click(combined_pdf_path)
+
+    # Crear el botón después de definir la función
+    process_all_button = ft.ElevatedButton(
+        "Combinar PDFs",  # Cambiado el texto para mejor claridad
+        on_click=process_all_pdfs,
+        visible=len(reports) > 0  # Solo visible si hay reportes
+    )
 
     def create_row_controls(index):
         """Crea los controles de movimiento y eliminación para cada fila"""
@@ -215,10 +244,13 @@ def create_data_table(reports: List[Dict[str, Any]] = None, on_row_select=None, 
     
     return ft.Container(
         content=ft.Column(
-            controls=[table],
+            controls=[
+                process_all_button,
+                table
+            ],
             scroll=ft.ScrollMode.ALWAYS,
         ),
-        height=800,  # Altura fija del contenedor
+        height=800,
         border_radius=8,
         expand=True,
     ) 
