@@ -13,7 +13,6 @@ class ReportController:
             if isinstance(start_date_str, datetime):
                 start_date = start_date_str
             else:
-                # Convertir las cadenas de fecha a objetos datetime
                 start_date = datetime.strptime(start_date_str, "%Y-%m-%d %H:%M:%S")
             
             if isinstance(end_date_str, datetime):
@@ -23,17 +22,21 @@ class ReportController:
             
             # Crear el filtro
             filter = ReportFilter(
+                report_type=report_type,
                 start_date=start_date,
-                end_date=end_date,
-                report_type=report_type
+                end_date=end_date
             )
             
             # Obtener los reportes
             return self.repository.get_reports(filter)
             
-        except ValueError as e:
-            print(f"Error processing filter: {str(e)}")
-            return []
         except Exception as e:
-            print(f"Unexpected error: {str(e)}")
+            print(f"Error en get_filtered_reports: {str(e)}")
             return []
+
+    def process_reports_to_pdf(self, reports: List[Dict[str, Any]], callback=None):
+        if not reports:
+            return []
+            
+        collection_type = reports[0].get('collection_type', 'preoperacionales')
+        return self.repository.process_report_to_pdf(collection_type, reports, callback)

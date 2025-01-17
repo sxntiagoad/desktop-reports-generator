@@ -1,3 +1,4 @@
+import os
 import flet as ft
 from datetime import datetime, timedelta
 from app.controllers.report_controller import ReportController
@@ -166,7 +167,7 @@ def main(page: ft.Page):
             ft.dropdown.Option("Chequeos de limpieza"),
             ft.dropdown.Option("Preoperacionales"),
         ],
-        value="Autoreportes de salud",
+        value="Preoperacionales",
         border_radius=8,
         text_size=14,
         label_style=ft.TextStyle(size=14, weight=ft.FontWeight.W_500),
@@ -341,25 +342,36 @@ def main(page: ft.Page):
     def handle_row_movement(direction, index):
         nonlocal current_reports
         try:
-            index = int(index) -1
+            index = int(index) - 1
             if direction == "up" and index > 0:
-                # Intercambiar con el elemento anterior
                 current_reports[index], current_reports[index-1] = current_reports[index-1], current_reports[index]
             elif direction == "down" and index < len(current_reports) - 1:
-                # Intercambiar con el elemento siguiente
                 current_reports[index], current_reports[index+1] = current_reports[index+1], current_reports[index]
             
             # Actualizar los índices
             for i, report in enumerate(current_reports, 1):
                 report['index'] = i
             
-            # Actualizar la tabla
-            new_table = create_data_table(current_reports, handle_row_movement)
+            # Actualizar la tabla asegurando pasar el callback
+            new_table = create_data_table(
+                current_reports, 
+                handle_row_movement,
+                handle_file_click  # Asegurarnos de pasar el callback
+            )
             data_table_container.content.controls[0].controls[0].content = new_table
             page.update()
             
         except Exception as e:
             print(f"Error al mover fila: {str(e)}")
+
+    def handle_file_click(pdf_path):
+        """Maneja el clic en un archivo PDF."""
+        if pdf_path and os.path.exists(pdf_path):
+            try:
+                # En Windows, esto abrirá el PDF con el visor predeterminado
+                os.startfile(pdf_path)
+            except Exception as e:
+                print(f"Error al abrir el PDF: {str(e)}")
 
     def filter_data(start_date_obj, end_date_obj, report_type):
         nonlocal current_reports
@@ -385,9 +397,27 @@ def main(page: ft.Page):
                 # Asegurarse de que cada reporte tenga un índice
                 for i, report in enumerate(current_reports, 1):
                     report['index'] = i
-                
-                new_table = create_data_table(current_reports, handle_row_movement)
+                new_table = create_data_table(
+                    current_reports, 
+                    handle_row_movement,
+                    handle_file_click  # Asegurarnos de pasar el callback
+                )
                 data_table_container.content.controls[0].controls[0].content = new_table
+                
+                # Iniciar el procesamiento de PDFs
+                def on_reports_updated(updated_reports):
+                    nonlocal current_reports
+                    current_reports = updated_reports
+                    new_table = create_data_table(
+                        current_reports, 
+                        handle_row_movement,
+                        handle_file_click  # Asegurarnos de pasar el callback
+                    )
+                    data_table_container.content.controls[0].controls[0].content = new_table
+                    page.update()
+                
+                # Iniciar procesamiento en segundo plano
+                report_controller.process_reports_to_pdf(current_reports, on_reports_updated)
                 
             except Exception as e:
                 print(f"Error en filter_data: {str(e)}")

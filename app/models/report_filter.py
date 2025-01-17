@@ -4,7 +4,7 @@ from typing import Optional
 class ReportFilter:
     REPORT_COLLECTIONS = {
         "Autoreportes de salud": "health_reports",
-        "Chequeos de limpieza": "limpiezas",
+        "Chequeos de limpieza": "limpieza",
         "Preoperacionales": "preoperacionales"
     }
 
