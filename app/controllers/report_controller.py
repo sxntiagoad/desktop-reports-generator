@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from app.models.report_filter import ReportFilter
 from app.repositories.report_repository import ReportRepository
 
@@ -7,7 +7,12 @@ class ReportController:
     def __init__(self):
         self.repository = ReportRepository()
     
-    def get_filtered_reports(self, start_date_str: str, end_date_str: str, report_type: str) -> List[Dict[str, Any]]:
+    def get_filtered_reports(self, 
+                           start_date_str: str, 
+                           end_date_str: str, 
+                           report_type: str,
+                           project: Optional[str] = None,
+                           car: Optional[str] = None) -> List[Dict[str, Any]]:
         try:
             # Verificar si las fechas son objetos datetime
             if isinstance(start_date_str, datetime):
@@ -20,11 +25,13 @@ class ReportController:
             else:
                 end_date = datetime.strptime(end_date_str, "%Y-%m-%d %H:%M:%S")
             
-            # Crear el filtro
+            # Crear el filtro 
             filter = ReportFilter(
                 report_type=report_type,
                 start_date=start_date,
-                end_date=end_date
+                end_date=end_date,
+                project=project,
+                car=car
             )
             
             # Obtener los reportes

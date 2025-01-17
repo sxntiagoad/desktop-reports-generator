@@ -10,11 +10,15 @@ class ReportFilter:
 
     def __init__(self, start_date: Optional[datetime] = None, 
                  end_date: Optional[datetime] = None, 
-                 report_type: str = "Preoperacionales"):
+                 report_type: str = "Preoperacionales",
+                 project: Optional[str] = None,
+                 car: Optional[str] = None):
         self.start_date = start_date.strftime("%Y-%m-%d %H:%M:%S") if start_date else None
         self.end_date = end_date.strftime("%Y-%m-%d %H:%M:%S") if end_date else None
         self.report_type = report_type
         self.collection = self.REPORT_COLLECTIONS[report_type]
+        self.project = project
+        self.car = car
 
     @property 
     def collection_name(self) -> str:

@@ -2,11 +2,26 @@ import os
 import flet as ft
 from datetime import datetime, timedelta
 from app.controllers.report_controller import ReportController
-from app.presentation.widgets.data_table import create_data_table  # Asegúrate de que este módulo exista
+from app.presentation.widgets.data_table import create_data_table
+from app.config.firebase_config import db
 
 def main(page: ft.Page):
     report_controller = ReportController()
     current_reports = []  # Variable para mantener los reportes actuales
+
+    global kits_list, projects_list, vehicles_list
+    kits_list = []
+    projects_list = []
+    vehicles_list = []
+    # Cargar datos de Firebase
+    doc = db.collection('typekid').document('kyb0aLSQnumHGvPKkIT1').get()
+    if doc.exists:
+        kits_list = doc.to_dict().get('kids',[])
+
+    doc1 = db.collection('proyectos').document('list_proyectos').get()
+    if doc1.exists:
+        projects_list = doc1.to_dict().get('proyectos',[])
+    doc_cars = db.collection('cars').get()
     
     # Configuración inicial de la página
     page.title = "Merchants Dashboard"
@@ -175,7 +190,7 @@ def main(page: ft.Page):
     )
 
     vehicle_selector = ft.Dropdown(
-        label="Seleccionar vehículo",
+        label="Seleccionar vehículo(Opcional)",
         options=[
             ft.dropdown.Option("Vehículo 1"),
             ft.dropdown.Option("Vehículo 2"),
@@ -190,32 +205,43 @@ def main(page: ft.Page):
     )
 
     project_selector = ft.Dropdown(
-        label="Seleccionar proyecto",
+        label="Seleccionar proyecto (Opcional)",
         options=[
-            ft.dropdown.Option("Empleado 1"),
-            ft.dropdown.Option("Empleado 2"),
-            ft.dropdown.Option("Empleado 3"),
+            ft.dropdown.Option("Todos", None),  # Opción que devuelve None
+            *[ft.dropdown.Option(kid) for kid in kits_list]
         ],
         border_radius=8,
         text_size=14,
         label_style=ft.TextStyle(size=14, weight=ft.FontWeight.W_500),
         focused_border_color="#1a73e8",
         focused_color="#1a73e8",
-        visible=False  # Inicialmente oculto
+        hint_text="Seleccione o escoja Todos",
+        visible=False
     )
+
     def on_report_type_change(e):
         selected_value = e.control.value
         if selected_value == "Preoperacionales":
             vehicle_selector.visible = True
             project_selector.visible = True
+            project_selector.options = [
+                ft.dropdown.Option("Todos", None),  # Opción que devuelve None
+                *[ft.dropdown.Option(kid) for kid in kits_list]
+            ]
         elif selected_value == "Autoreportes de salud":
             vehicle_selector.visible = False
             project_selector.visible = True
+            project_selector.options = [
+                ft.dropdown.Option("Todos", None),  # Opción que devuelve None
+                *[ft.dropdown.Option(proyecto) for proyecto in projects_list]
+            ]
         elif selected_value == "Chequeos de limpieza":
             vehicle_selector.visible = True
             project_selector.visible = False
+        
+        project_selector.value = None
         page.update()
-
+    # Asignar el callback al report_selector
     report_selector.on_change = on_report_type_change
 
     # Botón de filtrar
@@ -464,8 +490,20 @@ def main(page: ft.Page):
                 
                 start = start.replace(hour=0, minute=0, second=0)
                 end = end.replace(hour=23, minute=59, second=59)
+                # Obtener los valores opcionales
+                project = None if project_selector.value == "Todos" else project_selector.value
+                car = None if vehicle_selector.value== "Todos" else vehicle_selector.value
+                print(project)
+                print(car)
+                # Agregar los valores opcionales al filtro
+                current_reports = report_controller.get_filtered_reports(
+                    start, 
+                    end, 
+                    report_type,
+                    project=project,  # Parámetro opcional de proyecto
+                    car=car  # Parámetro opcional de vehículo
+                )
                 
-                current_reports = report_controller.get_filtered_reports(start, end, report_type)
                 # Asegurarse de que cada reporte tenga un índice
                 for i, report in enumerate(current_reports, 1):
                     report['index'] = i

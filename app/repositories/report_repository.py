@@ -46,29 +46,44 @@ class ReportRepository:
             collection = collection_map.get(report_filter.report_type, "preoperacionales")
             collection_ref = db.collection(collection)
             
-            # Agregar collection_type a los resultados
-            collection_type = collection
+            # Lista para almacenar todos los filtros
+            filters = []
             
+            # Agregar filtros de fecha según la colección
             if report_filter.collection == 'preoperacionales':
-                start_date_filter = FieldFilter('fechaInit', '>=', report_filter.start_date)
-                end_date_filter = FieldFilter('fechaInit', '<=', report_filter.end_date)
+                filters.append(FieldFilter('fechaInit', '>=', report_filter.start_date))
+                filters.append(FieldFilter('fechaInit', '<=', report_filter.end_date))
             else:
-                start_date_filter = FieldFilter('fecha', '>=', report_filter.start_date)
-                end_date_filter = FieldFilter('fecha', '<=', report_filter.end_date)
+                filters.append(FieldFilter('fecha', '>=', report_filter.start_date))
+                filters.append(FieldFilter('fecha', '<=', report_filter.end_date))
             
+            # Agregar filtro de vehículo si existe
+            if report_filter.car:
+                car_id = self.fetch_car_id_by_plate(report_filter.car)
+                filters.append(FieldFilter('carId', '==', car_id))
+            
+            # Agregar filtro de proyecto si existe
+            if report_filter.project:
+                if report_filter.collection == 'preoperacionales':
+                    filters.append(FieldFilter('typeKit', '==', report_filter.project))
+                else:
+                    filters.append(FieldFilter('selectedValue', '==', report_filter.project))
+            
+            # Crear el filtro compuesto con todos los filtros
             composite_filter = BaseCompositeFilter(
                 StructuredQuery.CompositeFilter.Operator.AND, 
-                [start_date_filter, end_date_filter]
+                filters
             )
+
+            # Aplicar el filtro compuesto a la consulta
             if report_filter.collection == 'preoperacionales':
-                query = collection_ref.where(filter=composite_filter).select(['userId', 'fechaInit' , 'carId', 'typeKit'])  # Solo cargar userId y fechaInit
-                docs = query.get()
+                query = collection_ref.where(filter=composite_filter).select(['userId', 'fechaInit', 'carId', 'typeKit'])
             elif report_filter.collection == 'limpieza':
-                query = collection_ref.where(filter=composite_filter).select(['userId', 'fecha' , 'carId'])  # Solo cargar userId y fechaInit
-                docs = query.get()
+                query = collection_ref.where(filter=composite_filter).select(['userId', 'fecha', 'carId'])
             else:
-                query = collection_ref.where(filter=composite_filter).select(['userId', 'fecha' , 'carId', 'selectedValue'])  # Solo cargar userId y fechaInit
-                docs = query.get()
+                query = collection_ref.where(filter=composite_filter).select(['userId', 'fecha', 'carId', 'selectedValue'])
+
+            docs = query.get()
 
             # Procesar documentos con índice
             results = []
@@ -76,7 +91,7 @@ class ReportRepository:
                 data = doc.to_dict()
                 if report_filter.collection == 'preoperacionales':
                     data.update({
-                        'collection_type': collection_type,  # Agregar collection_type
+                        'collection_type': collection,  # Agregar collection_type
                         'index': index,
                         'doc_id': doc.id,  # ID del documento
                         'fecha_formatted': datetime.strptime(data.get('fechaInit', ''),"%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y %H:%M"),
@@ -90,7 +105,7 @@ class ReportRepository:
                     results.append(data)
                 elif report_filter.collection == 'limpiezas':
                     data.update({
-                        'collection_type': collection_type,  # Agregar collection_type
+                        'collection_type': collection,  # Agregar collection_type
                         'index': index,
                         'doc_id': doc.id,  # ID del documento
                         'fecha_formatted': datetime.strptime(data.get('fechaInit', ''),"%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y %H:%M"),
@@ -104,7 +119,7 @@ class ReportRepository:
                     results.append(data)
                 else:
                     data.update({
-                        'collection_type': collection_type,  # Agregar collection_type
+                        'collection_type': collection,  # Agregar collection_type
                         'index': index,
                         'doc_id': doc.id,  # ID del documento
                         'fecha_formatted': datetime.strptime(data.get('fecha', ''),"%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y %H:%M"),
@@ -122,6 +137,15 @@ class ReportRepository:
             print(f"Error en la consulta: {str(e)}")
             return []
         
+
+    def fetch_car_id_by_plate(self, car_plate: str) -> str:
+        try:
+            car_doc = db.collection('cars').where('carPlate', '==', car_plate).get()
+            return car_doc[0].id
+        except Exception as e:
+            print(f"Error al obtener el ID del vehículo: {str(e)}")
+            return None
+
     def fetch_name(self, doc_uid: str, collection: str, field: str):
         """Obtiene el nombre completo del usuario desde Firestore."""
         try:
@@ -217,7 +241,8 @@ class ReportRepository:
                     print(f"Error en el procesamiento: {str(e)}")
 
             # Verificar si quedó alguno pendiente y volver a procesar
-            pending_reports = [r for r in reports if r.get('processing_status') in ['pending', 'error']]
+            pending_reports = [r for r in reports if r.get('processing_status') in ['pending', 'error', 'retrying']]
+            
             if pending_reports:
                 for report in pending_reports:
                     try:
@@ -225,6 +250,15 @@ class ReportRepository:
                     except Exception as e:
                         print(f"Error en el reprocesamiento: {str(e)}")
 
+            # Reprocesar todos los reportes una última vez para asegurar
+            final_check_reports = [r for r in reports if r.get('processing_status') != 'completed']
+            if final_check_reports:
+                print("Realizando verificación final de reportes...")
+                for report in final_check_reports:
+                    try:
+                        process_single_report(report)
+                    except Exception as e:
+                        print(f"Error en la verificación final: {str(e)}")
             # Actualizar UI una última vez
             if callback: 
                 print("Actualizando UI final")
