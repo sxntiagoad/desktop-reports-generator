@@ -21,7 +21,9 @@ def main(page: ft.Page):
     doc1 = db.collection('proyectos').document('list_proyectos').get()
     if doc1.exists:
         projects_list = doc1.to_dict().get('proyectos',[])
-    doc_cars = db.collection('cars').get()
+    doc_cars = db.collection('cars').select(['carPlate']).get()
+    if doc_cars:
+        vehicles_list = [doc.to_dict().get('carPlate') for doc in doc_cars]
     
     # Configuración inicial de la página
     page.title = "Merchants Dashboard"
@@ -192,16 +194,15 @@ def main(page: ft.Page):
     vehicle_selector = ft.Dropdown(
         label="Seleccionar vehículo(Opcional)",
         options=[
-            ft.dropdown.Option("Vehículo 1"),
-            ft.dropdown.Option("Vehículo 2"),
-            ft.dropdown.Option("Vehículo 3"),
+            ft.dropdown.Option("Todos", None),  # Opción por defecto que devuelve None
+            *[ft.dropdown.Option(plate, plate) for plate in vehicles_list]  # Convertir cada placa en una Option
         ],
         border_radius=8,
         text_size=14,
         label_style=ft.TextStyle(size=14, weight=ft.FontWeight.W_500),
         focused_border_color="#1a73e8",
         focused_color="#1a73e8",
-        visible=False  # Inicialmente oculto
+        visible=False
     )
 
     project_selector = ft.Dropdown(
