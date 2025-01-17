@@ -356,7 +356,8 @@ def main(page: ft.Page):
             new_table = create_data_table(
                 current_reports, 
                 handle_row_movement,
-                handle_file_click  # Asegurarnos de pasar el callback
+                handle_file_click,
+                handle_delete
             )
             data_table_container.content.controls[0].controls[0].content = new_table
             page.update()
@@ -372,6 +373,32 @@ def main(page: ft.Page):
                 os.startfile(pdf_path)
             except Exception as e:
                 print(f"Error al abrir el PDF: {str(e)}")
+
+    def handle_delete(index):
+        """Maneja la eliminación de una fila"""
+        nonlocal current_reports
+        try:
+            index = int(index) - 1
+            if 0 <= index < len(current_reports):
+                # Eliminar el reporte
+                deleted_report = current_reports.pop(index)
+                print(f"Reporte eliminado: {deleted_report.get('doc_id')}")
+                
+                # Reindexar los reportes restantes
+                for i, report in enumerate(current_reports, 1):
+                    report['index'] = i
+                
+                # Actualizar la tabla
+                new_table = create_data_table(
+                    current_reports,
+                    handle_row_movement,
+                    handle_file_click,
+                    handle_delete
+                )
+                data_table_container.content.controls[0].controls[0].content = new_table
+                page.update()
+        except Exception as e:
+            print(f"Error al eliminar fila: {str(e)}")
 
     def filter_data(start_date_obj, end_date_obj, report_type):
         nonlocal current_reports
@@ -400,7 +427,8 @@ def main(page: ft.Page):
                 new_table = create_data_table(
                     current_reports, 
                     handle_row_movement,
-                    handle_file_click  # Asegurarnos de pasar el callback
+                    handle_file_click,
+                    handle_delete
                 )
                 data_table_container.content.controls[0].controls[0].content = new_table
                 
@@ -411,7 +439,8 @@ def main(page: ft.Page):
                     new_table = create_data_table(
                         current_reports, 
                         handle_row_movement,
-                        handle_file_click  # Asegurarnos de pasar el callback
+                        handle_file_click,
+                        handle_delete
                     )
                     data_table_container.content.controls[0].controls[0].content = new_table
                     page.update()

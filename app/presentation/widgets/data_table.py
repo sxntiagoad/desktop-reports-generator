@@ -2,7 +2,7 @@ import flet as ft
 from typing import Any, List, Dict
 import os
 
-def create_data_table(reports: List[Dict[str, Any]] = None, on_row_select=None, on_file_click=None) -> ft.Container:
+def create_data_table(reports: List[Dict[str, Any]] = None, on_row_select=None, on_file_click=None, on_delete=None) -> ft.Container:
     # Tabla vacía si no hay reportes
     if reports is None:
         reports = []
@@ -75,7 +75,7 @@ def create_data_table(reports: List[Dict[str, Any]] = None, on_row_select=None, 
     columns = base_columns
 
     def create_row_controls(index):
-        """Crea los controles de movimiento para cada fila"""
+        """Crea los controles de movimiento y eliminación para cada fila"""
         return ft.Row(
             controls=[
                 ft.IconButton(
@@ -91,6 +91,13 @@ def create_data_table(reports: List[Dict[str, Any]] = None, on_row_select=None, 
                     icon_size=20,
                     tooltip="Mover abajo",
                     on_click=lambda e, idx=index: handle_row_movement("down", idx)
+                ),
+                ft.IconButton(
+                    icon=ft.icons.DELETE,
+                    icon_color="red",
+                    icon_size=20,
+                    tooltip="Eliminar",
+                    on_click=lambda e, idx=index: handle_delete(idx)
                 ),
             ],
             alignment=ft.MainAxisAlignment.CENTER,
@@ -113,6 +120,11 @@ def create_data_table(reports: List[Dict[str, Any]] = None, on_row_select=None, 
                 if report['doc_id'] in pdf_states:
                     report['pdf_path'] = pdf_states[report['doc_id']]['pdf_path']
                     report['processing_status'] = pdf_states[report['doc_id']]['processing_status']
+
+    def handle_delete(index):
+        """Maneja la eliminación de una fila"""
+        if on_delete:
+            on_delete(index)
 
     def get_file_button(report):
         status = report.get('processing_status', 'pending')
