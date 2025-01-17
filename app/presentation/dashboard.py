@@ -167,13 +167,56 @@ def main(page: ft.Page):
             ft.dropdown.Option("Chequeos de limpieza"),
             ft.dropdown.Option("Preoperacionales"),
         ],
-        value="Preoperacionales",
         border_radius=8,
         text_size=14,
         label_style=ft.TextStyle(size=14, weight=ft.FontWeight.W_500),
         focused_border_color="#1a73e8",
         focused_color="#1a73e8",
     )
+
+    vehicle_selector = ft.Dropdown(
+        label="Seleccionar vehículo",
+        options=[
+            ft.dropdown.Option("Vehículo 1"),
+            ft.dropdown.Option("Vehículo 2"),
+            ft.dropdown.Option("Vehículo 3"),
+        ],
+        border_radius=8,
+        text_size=14,
+        label_style=ft.TextStyle(size=14, weight=ft.FontWeight.W_500),
+        focused_border_color="#1a73e8",
+        focused_color="#1a73e8",
+        visible=False  # Inicialmente oculto
+    )
+
+    project_selector = ft.Dropdown(
+        label="Seleccionar proyecto",
+        options=[
+            ft.dropdown.Option("Empleado 1"),
+            ft.dropdown.Option("Empleado 2"),
+            ft.dropdown.Option("Empleado 3"),
+        ],
+        border_radius=8,
+        text_size=14,
+        label_style=ft.TextStyle(size=14, weight=ft.FontWeight.W_500),
+        focused_border_color="#1a73e8",
+        focused_color="#1a73e8",
+        visible=False  # Inicialmente oculto
+    )
+    def on_report_type_change(e):
+        selected_value = e.control.value
+        if selected_value == "Preoperacionales":
+            vehicle_selector.visible = True
+            project_selector.visible = True
+        elif selected_value == "Autoreportes de salud":
+            vehicle_selector.visible = False
+            project_selector.visible = True
+        elif selected_value == "Chequeos de limpieza":
+            vehicle_selector.visible = True
+            project_selector.visible = False
+        page.update()
+
+    report_selector.on_change = on_report_type_change
 
     # Botón de filtrar
     filter_button = ft.Container(
@@ -200,13 +243,15 @@ def main(page: ft.Page):
                         start_date_button,
                         end_date_button,
                         report_selector,
+                        vehicle_selector,    # Agregar nuevo selector
+                        project_selector,   # Agregar nuevo selector
                     ],
                     spacing=16,
                 ),
                 filter_button
             ],
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,  # Distribuir el espacio entre los controles
-            expand=True,  # Expandir para ocupar todo el ancho disponible
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            expand=True,
         ),
         padding=ft.padding.all(16),
         bgcolor="#ffffff",
