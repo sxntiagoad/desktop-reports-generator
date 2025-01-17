@@ -146,7 +146,6 @@ class ReportRepository:
             while retries < MAX_RETRIES:
                 try:
                     doc_id = report['doc_id']
-                    print(f"Procesando reporte {doc_id} - Intento {retries + 1}")
                     
                     report['processing_status'] = 'processing'
                     if callback: callback(reports)
@@ -162,7 +161,6 @@ class ReportRepository:
                                 f.read(1)
                             report['pdf_path'] = pdf_path
                             report['processing_status'] = 'completed'
-                            print(f"PDF existente y válido para {doc_id}")
                             if callback: callback(reports)
                             return
                         except:
@@ -181,7 +179,6 @@ class ReportRepository:
                         if result_pdf_path and os.path.exists(result_pdf_path):
                             report['pdf_path'] = result_pdf_path
                             report['processing_status'] = 'completed'
-                            print(f"PDF generado exitosamente para {doc_id}")
                             break
                         else:
                             raise Exception("PDF no generado")
@@ -222,7 +219,6 @@ class ReportRepository:
             # Verificar si quedó alguno pendiente y volver a procesar
             pending_reports = [r for r in reports if r.get('processing_status') in ['pending', 'error']]
             if pending_reports:
-                print(f"Reprocesando {len(pending_reports)} reportes pendientes...")
                 for report in pending_reports:
                     try:
                         process_single_report(report)
